@@ -1,0 +1,18 @@
+# env files / credentials
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# node
+node_modules/
+dist/
+build/
+
+# misc
+.DS_Store
+*.log
