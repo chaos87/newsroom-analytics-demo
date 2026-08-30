@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: ga4
+    database: "{{ var('source_project') }}"   # Postgres database holding the export (e.g. 'neondb')
+    schema: analytics_{{ var('property_ids')[0] }}   # GA4 exports to dataset analytics_<property_id>
+    tables:
+      - name: events
+        description: >
+          Main events table exported by GA4. On BigQuery this is the daily-sharded
+          events_* wildcard set; on Postgres it is a single table natively
+          partitioned by day with partitions named events_YYYYMMDD.
+          Use the 'start_date' variable to limit scans; partition pruning applies
+          on any event_date predicate.

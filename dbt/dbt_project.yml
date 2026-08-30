@@ -1,0 +1,66 @@
+name: 'newsroom_analytics'
+version: '1.0.0'
+config-version: 2
+profile: newsroom_analytics
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# GA4 export vars are declared flat (global) rather than nested under `ga4:`
+# so that both the vendored dbt-ga4 package models AND the custom event
+# models in this project resolve them (upstream convention nests them, which
+# scopes them to package nodes only).
+vars:
+  # ── dbt-ga4 required ────────────────────────────────────────────────
+  source_project: "neondb"          # Postgres database that holds the export
+  property_ids: [3847629104]        # GA4 property id (dataset analytics_<id>)
+  start_date: "20250401"            # earliest export date to process
+  static_incremental_days: 3        # GA4 late-arrival window: reprocess 3 days
+  # ── dbt-ga4 optional ─────────────────────────────────────────────────
+  # Last non-direct attribution: GA4's default 30-day lookback window
+  session_attribution_lookback_window_days: 30
+  # The newsroom conversion event
+  conversion_events: ["newsletter_signup"]
+  # GA4 user properties sent by the site (subscriber status + tier)
+  user_properties:
+    - user_property_name: "subscriber_status"
+      value_type: "string_value"
+    - user_property_name: "subscription_tier"
+      value_type: "string_value"
+  # Custom event parameters collected by the site's dataLayer
+  page_view_custom_parameters:
+    - name: "article_id"
+      value_type: "string_value"
+    - name: "section"
+      value_type: "string_value"
+  scroll_custom_parameters:
+    - name: "article_id"
+      value_type: "string_value"
+  bookmark_custom_parameters:
+    - name: "article_id"
+      value_type: "string_value"
+  comment_custom_parameters:
+    - name: "article_id"
+      value_type: "string_value"
+  newsletter_signup_custom_parameters:
+    - name: "method"
+      value_type: "string_value"
+
+models:
+  newsroom_analytics:
+    +materialized: view
+    staging:
+      +schema: stg
+    marts:
+      +materialized: incremental
+      +schema: marts
+
+seeds:
+  newsroom_analytics:
+    +schema: stg

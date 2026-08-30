@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+*.env
 
 # python
 __pycache__/
@@ -12,6 +13,13 @@ __pycache__/
 node_modules/
 dist/
 build/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/profiles.yml
+.user.yml/
 
 # misc
 .DS_Store

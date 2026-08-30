@@ -1,0 +1,29 @@
+version: 2
+
+sources:
+  - name: cms
+    database: "{{ var('source_project') }}"
+    schema: cms
+    description: >
+      CMS export (articles) and CRM export (registered accounts) — the business
+      data that a newsroom joins against GA4 analytics.
+    tables:
+      - name: articles
+        description: Editorial content inventory (one row per published article).
+        columns:
+          - name: article_id
+            tests:
+              - unique
+          - name: title
+          - name: section
+          - name: author
+          - name: published_at
+          - name: word_count
+          - name: is_breaking
+          - name: has_video
+      - name: users
+        description: CRM accounts (registered readers), including subscription state.
+        columns:
+          - name: user_id
+            tests:
+              - unique

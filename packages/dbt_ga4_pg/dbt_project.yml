@@ -1,0 +1,26 @@
+name: 'ga4'
+version: '6.2.0-pg'
+config-version: 2
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  ga4:
+    +materialized: view
+    staging:
+      +schema: stg
+    marts:
+      +materialized: table
+      +schema: marts
+
+seeds:
+  ga4:
+    +schema: stg

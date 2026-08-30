@@ -1,0 +1,62 @@
+name: dbt daily build
+
+# Daily incremental dbt run against the Neon GA4 export — the pipeline layer.
+# The dbt-ga4 daily models reprocess a 3-day window (GA4 late-arrival pattern)
+# keyed on current_date; when no new export data has landed the run is a cheap
+# no-op that still exercises the incremental window logic.
+on:
+  schedule:
+    - cron: "5 3 * * *" # 03:05 UTC daily
+  workflow_dispatch: {}
+
+jobs:
+  dbt:
+    runs-on: ubuntu-latest
+    env:
+      DBT_HOST: ${{ secrets.DBT_HOST }}
+      DBT_USER: ${{ secrets.DBT_USER }}
+      DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+      DBT_DBNAME: ${{ secrets.DBT_DBNAME }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        run: pip install dbt-postgres
+
+      - name: Write profiles.yml
+        working-directory: ./dbt
+        run: |
+          cat > profiles.yml <<EOF
+          newsroom_analytics:
+            target: prod
+            outputs:
+              prod:
+                type: postgres
+                host: $DBT_HOST
+                port: 5432
+                user: $DBT_USER
+                password: $DBT_PASSWORD
+                dbname: $DBT_DBNAME
+                schema: ga4
+                threads: 1
+                sslmode: require
+          EOF
+
+      - name: dbt deps
+        working-directory: ./dbt
+        run: dbt deps --profiles-dir .
+
+      - name: dbt build
+        working-directory: ./dbt
+        run: dbt build --profiles-dir . --no-use-colors
+        # Incremental by design: the dbt-ga4 daily models reprocess the
+        # current_date window (GA4 late-arrival pattern) on every run.
+
+      - name: dbt run summary
+        if: always()
+        working-directory: ./dbt
+        run: tail -n 40 target/run_results.json || true

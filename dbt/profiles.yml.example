@@ -1,0 +1,16 @@
+# Example dbt profile for the newsroom_analytics project.
+# CI passes the same values via environment variables (see profiles.yml.jinja
+# rendering in .github/workflows/dbt-daily.yml).
+newsroom_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: <neon-host>.neon.tech
+      port: 5432
+      user: neondb_owner
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      dbname: neondb
+      schema: ga4
+      threads: 1
+      sslmode: require

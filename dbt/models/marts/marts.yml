@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: fct_newsroom__articles_daily
+    description: >
+      Daily article performance: GA4 page views, users, scroll, video, social and
+      engagement metrics per article, joined to the CMS export (title, section,
+      author). One row per (event_date_dt, article_id).
+    columns:
+      - name: event_date_dt
+        tests: [not_null]
+      - name: article_id
+        tests: [not_null]
+      - name: page_views
+        tests: [not_null]
+  - name: fct_newsroom__traffic_sources_daily
+    description: >
+      Daily sessions by acquisition channel: GA4 default channel grouping, session
+      (first-click) source/medium, and last-non-direct attribution computed with a
+      30-day lookback window by the dbt-ga4 package.
+    columns:
+      - name: session_partition_date
+        tests: [not_null]
+      - name: sessions
+        tests: [not_null]
