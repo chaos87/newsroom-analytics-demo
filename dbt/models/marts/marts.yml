@@ -51,3 +51,24 @@ models:
         tests: [not_null]
       - name: sessions
         tests: [not_null]
+  - name: fct_newsroom__subscription_last_touch
+    description: >
+      Last-touch attribution for subscriptions: one row per subscriber — the
+      last article read in the 7 days before their subscription date (with
+      reader state at that read), plus the purchase session (last session
+      on/before the subscription date) with platform, device, geo and
+      first-click session traffic source. Subscription moment = CRM
+      registration_date (no explicit subscribe event exists in GA4).
+    columns:
+      - name: user_id
+        tests:
+          - not_null
+          - unique
+      - name: subscription_date
+        tests: [not_null]
+      - name: subscription_tier
+        tests: [not_null]
+      - name: last_article_reader_state
+        tests:
+          - accepted_values:
+              values: ['registered', 'anonymous']
