@@ -27,3 +27,6 @@ sources:
           - name: user_id
             tests:
               - unique
+          - name: registration_date
+          - name: subscription_date
+            description: When the reader subscribed (null for non-subscribers; separate from registration).

@@ -54,8 +54,14 @@ CREATE TABLE IF NOT EXISTS cms.users (
     registration_date  date  NOT NULL,
     country            text,
     is_subscriber      boolean NOT NULL DEFAULT false,
-    subscription_tier  text
+    subscription_tier  text,
+    subscription_date  date          -- subscription ≠ registration: later-session
+                                    -- subscribers convert days/weeks after
+                                    -- registering (null for non-subscribers)
 );
+
+-- idempotent upgrade path for databases created before subscription_date
+ALTER TABLE cms.users ADD COLUMN IF NOT EXISTS subscription_date date;
 
 -- ─── GA4 events export (events_YYYYMMDD tables) ────────────────────────────
 -- Column set mirrors the GA4 BigQuery export "events" table:

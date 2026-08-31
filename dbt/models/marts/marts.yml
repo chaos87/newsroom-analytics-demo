@@ -59,8 +59,9 @@ models:
       session containing the subscribe event) with platform, device, geo and
       first-click session traffic source, plus the last article read within
       7 days before converting (with reader state at that read). Falls back
-      to CRM registration_date semantics when no subscribe event exists
-      (subscription_source = 'crm_only').
+      to CRM dates when no subscribe event exists (subscription_source =
+      'crm_only'; subscription_date coalesces the CRM subscription date with
+      registration_date for legacy rows).
     columns:
       - name: user_id
         tests:

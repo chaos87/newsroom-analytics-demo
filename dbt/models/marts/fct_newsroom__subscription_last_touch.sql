@@ -42,7 +42,7 @@ with subscribers as (
     select
         user_id
         , user_pseudo_id
-        , registration_date as subscription_date
+        , coalesce(subscription_date, registration_date) as subscription_date
         , subscription_tier
     from {{ source('cms', 'users') }}
     where is_subscriber = true
