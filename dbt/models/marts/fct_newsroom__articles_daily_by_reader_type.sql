@@ -1,6 +1,7 @@
 {#-
     Daily article performance by reader type: subscribers vs registered
-    non-subscribers vs anonymous readers.
+    non-subscribers vs anonymous readers, with the subscription tier for
+    subscriber rows ('n/a' for registered / anonymous).
 
     reader_type is classified from the GA4 user_id carried on the event,
     joined to the CRM export (cms.users):
@@ -18,7 +19,7 @@
     config(
         materialized = 'incremental',
         incremental_strategy = 'delete+insert',
-        unique_key = ['event_date_dt', 'article_id', 'reader_type'],
+        unique_key = ['event_date_dt', 'article_id', 'reader_type', 'subscription_tier'],
         tags = ["incremental"]
     )
 }}
@@ -85,6 +86,11 @@ classified as (
             when u.user_id is not null then 'registered'
             else 'anonymous'
         end as reader_type
+        , case
+            when u.user_id is not null and u.is_subscriber
+                then coalesce(u.subscription_tier, 'unknown')
+            else 'n/a'
+        end as subscription_tier
     from enriched e
     left join {{ source('cms', 'users') }} u on u.user_id = e.user_id
 ),
@@ -93,6 +99,7 @@ article_daily as (
         event_date_dt
         , article_id
         , reader_type
+        , subscription_tier
         , count(*) filter (where event_name = 'page_view') as page_views
         , count(distinct client_key) filter (where event_name = 'page_view') as distinct_client_keys
         , sum(case when event_name = 'page_view' and session_number = 1 then 1 else 0 end) as new_client_keys
@@ -108,13 +115,14 @@ article_daily as (
         , count(*) filter (where event_name = 'newsletter_signup') as newsletter_signups
     from classified
     where article_id is not null
-    group by 1, 2, 3
+    group by 1, 2, 3, 4
 )
 
 select
     ad.event_date_dt
     , ad.article_id
     , ad.reader_type
+    , ad.subscription_tier
     , a.title
     , a.section
     , a.author

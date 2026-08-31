@@ -17,14 +17,16 @@ models:
     description: >
       Daily article performance split by reader type — subscriber /
       registered non-subscriber / anonymous — classified from the GA4 user_id
-      on each event joined to the CRM export. One row per
-      (event_date_dt, article_id, reader_type).
+      on each event joined to the CRM export. Subscribers are further split by
+      subscription tier ('n/a' for registered / anonymous). One row per
+      (event_date_dt, article_id, reader_type, subscription_tier).
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
             - event_date_dt
             - article_id
             - reader_type
+            - subscription_tier
     columns:
       - name: event_date_dt
         tests: [not_null]
@@ -35,6 +37,8 @@ models:
           - not_null
           - accepted_values:
               values: ['subscriber', 'registered', 'anonymous']
+      - name: subscription_tier
+        tests: [not_null]
       - name: page_views
         tests: [not_null]
   - name: fct_newsroom__traffic_sources_daily
