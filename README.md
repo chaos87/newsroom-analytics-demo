@@ -53,7 +53,7 @@ What runs daily (GitHub Action → Neon):
 - **`fct_ga4__pages`** — page metrics incl. engaged time (the package's page_engagement_key trick)
 - **`dim_ga4__client_keys` / `fct_ga4__user_ids`** — user-level identity stitching (GA4 `user_id` ↔ `user_pseudo_id`)
 - **`newsletter_signup` = conversion event**, counted per session and per page
-- Newsroom marts: **`fct_newsroom__articles_daily`** (GA4 × CMS: page views, scroll depth, video, shares, engagement per article) and **`fct_newsroom__traffic_sources_daily`** (sessions by channel grouping)
+- Newsroom marts: **`fct_newsroom__articles_daily`** (GA4 × CMS: page views, scroll depth, video, shares, engagement per article), **`fct_newsroom__articles_daily_by_reader_type`** (the same article metrics split into subscriber / registered / anonymous readers via the CRM join), and **`fct_newsroom__traffic_sources_daily`** (sessions by channel grouping)
 
 The incremental models reprocess a **3-day window per run** — the same late-arrival pattern GA4 itself uses ("Analytics will update the daily tables for up to three days after the event date").
 
