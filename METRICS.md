@@ -2,16 +2,16 @@
 
 **The semantic layer's data catalog for The Meridian Post** — the single source of truth for what every metric and dimension *means* before it gets encoded as [Cube.js](https://cube.dev) YAML (cubes → measures + dimensions). The Cube models are generated from these definitions; if a definition changes, this document changes first.
 
-Status: **v1.1 — 2026-09-01** · 21 metrics, 22 dimensions.
+Status: **v1.2 — 2026-09-01** · 21 metrics, 22 dimensions — paywall + churn shipped in the data.
 
 ## Data context (what the catalog is built on)
 
 | Layer | Facts |
 |---|---|
-| Raw GA4 export (`analytics_3847629104`) | 257,535 events · 42,410 sessions · 3,310 first visits · Apr 2025 → Mar 2026 · 14 event types |
+| Raw GA4 export (`analytics_3847629104`) | 204,388 events · 42,117 sessions · 3,323 first visits · Apr 2025 → Mar 2026 · 16 event types |
 | CMS export (`cms.articles`) | 1,000 articles · 12 authors · 8 sections · published 2025-01-01 → 2026-03-25 · 350–2,400 words |
-| CRM export (`cms.users`) | 350 registered accounts · 246 subscribers · tiers: digital-only / basic / premium |
-| dbt marts (`ga4_marts`) | sessions, pages, traffic sources, articles daily, reader types, subscription last-touch |
+| CRM export (`cms.users`) | 350 registered accounts · 256 subscribers (204 active · 52 churned) · tiers: digital-only / basic / premium |
+| dbt marts (`ga4_marts`) | sessions, pages, traffic sources, articles daily, reader types, subscription last-touch, paywall funnel (daily + exposed sessions) |
 
 ## Conventions
 
@@ -40,7 +40,7 @@ Status: **v1.1 — 2026-09-01** · 21 metrics, 22 dimensions.
 
 Notes:
 - *Active Users* counts any-event users. The stricter GA4 refinement — users with ≥ 1 **engaged** session — is also computable (`is_session_engaged`); we ship any-event as the headline and can expose `Engaged Users` alongside.
-- Today **Pageviews = Article Pageviews** (86,622): the generator only emits article pages. The definitions stay distinct — homepage/section views will appear if the generator later emits them.
+- Today **Pageviews = Article Pageviews** (70,373): the generator only emits article pages. The definitions stay distinct — homepage/section views will appear if the generator later emits them.
 
 ### Reader growth & subscriptions
 
@@ -52,11 +52,11 @@ Notes:
 | **New Subscribers** | Accounts whose `subscription_date` falls in the period — 1:1 with `subscribe` events | `COUNT(*)` on `cms.users` ≡ `COUNT(subscribe)` | `cms.users` / `fct_newsroom__subscription_last_touch` | ✅ |
 | **Number of Registered Users** | Cumulative accounts registered as of period end | `COUNT(*) WHERE registration_date <= period_end` | `cms.users` | ✅ |
 | **Number of Subscribers** | Active subscriptions as of period end (churn-aware) | `COUNT(*) WHERE subscription_date <= period_end AND (churn_date IS NULL OR churn_date > period_end)` | `cms.users` | ✅ |
-| **New Churns** | Subscriptions cancelled in the period | `COUNT(*) WHERE churn_date IN period` | `cms.users` | 🧩 |
+| **New Churns** | Subscriptions cancelled in the period | `COUNT(*) WHERE churn_date IN period` | `cms.users` | ✅ |
 
 Notes:
 - *New Subscribers* is available both CRM-side (date grain) and GA4-side (`subscribe` event → exact timestamp, purchase session, attribution). The GA4 side powers the source/device/geo slices.
-- **Churn (decided):** the CRM gains `churn_date` — a share of subscribers cancel after ≥ 1 billing cycle. *New Churns* counts cancellations in period; *Active/Number of Subscribers* are churn-aware. Churn stays CRM-side for v1 (no GA4 churn event).
+- **Churn (shipped):** `churn_date` on the CRM — 52 of 256 subscribers cancelled (May 2025 → Mar 2026, each ≥ 1 billing cycle after subscribing). *New Churns* counts cancellations in period; *Active/Number of Subscribers* are churn-aware; churned readers classify as 'registered' from their churn date. Churn stays CRM-side (no GA4 churn event).
 - *Active Registered/Subscribers* deliberately mirror the reader-type lens (anonymous / registered / subscriber) used by `fct_newsroom__articles_daily_by_reader_type`.
 
 ### Content
@@ -68,17 +68,17 @@ Notes:
 
 ### Paywall funnel
 
-**Paywall model (decided):** two wall variants, both enforced as hard blocks on the article. Non-subscribers get **3 free article reads per calendar month** — from the 4th onward, metered sections serve the wall (`paywall_type = 'metered'`). Premium sections are walled on **every** non-subscriber read, no free allowance (`paywall_type = 'hard'`). One section is never walled (lifestyle — least premium content). Subscribers never see a paywall. Every wall carries the `bundle_offer` shown — tier-aligned: digital-only / basic / premium — mirrored on the subsequent `subscribe`.
+**Paywall model (shipped):** two wall variants, both enforced as hard blocks on the article. Non-subscribers get **3 free article reads per calendar month** — from the 4th onward, metered sections serve the wall (`paywall_type = 'metered'`). Premium sections are walled on **every** non-subscriber read, no free allowance (`paywall_type = 'hard'`). One section is never walled (lifestyle). Subscribers never see a paywall. Every wall carries the `bundle_offer` shown — tier-aligned: digital-only / basic / premium — mirrored on the subsequent `subscribe`.
 
 | Metric | Definition | Formula | Source | Status |
 |---|---|---|---|---|
-| **Paywall Impressions** | Times a paywall was served to a non-subscriber (blocked article hit) | `COUNT(paywall_impression)` | new event | 🧩 |
-| **Paywall Clicks** | Clicks on the paywall's subscribe CTA | `COUNT(paywall_click)` | new event | 🧩 |
-| **Paywall Conversion Rate** | New Subscribers ÷ sessions exposed to the paywall in the period | `New Subscribers ÷ COUNT(DISTINCT session_key WHERE session has ≥ 1 paywall_impression)` | derived | 🧩 |
+| **Paywall Impressions** | Times a paywall was served to a non-subscriber (blocked article hit) | `COUNT(paywall_impression)` | `fct_newsroom__paywall_daily` | ✅ |
+| **Paywall Clicks** | Clicks on the paywall's subscribe CTA | `COUNT(paywall_click)` | `fct_newsroom__paywall_daily` | ✅ |
+| **Paywall Conversion Rate** | New Subscribers ÷ sessions exposed to the paywall in the period | `New Subscribers ÷ COUNT(rows: fct_newsroom__paywall_sessions_daily)` | derived | ✅ |
 
 Companion ratio: **Paywall CTR** = Paywall Clicks ÷ Paywall Impressions. Both ratios break down by Paywall Type and Bundle Offer — *which wall converts* is the dashboard story.
 
-**Status:** model decided, not yet generated. Extension: `paywall_impression` + `paywall_click` events on blocked hits (params `article_id`, `paywall_type`, `bundle_offer`, mirrored on `subscribe`) + full-year regen.
+**In the demo year:** 31,977 impressions (hard 26,899 · metered 5,078) → 1,614 clicks (CTR 5.1%: hard 4.7% · metered 7.0%) → 256 subscribers across 25,615 paywall-exposed sessions — **1.0% session conversion rate**. Every conversion runs the full funnel: impression → click → subscribe in the same session, bundle shown = tier bought.
 
 ## Dimensions
 
@@ -96,15 +96,15 @@ Companion ratio: **Paywall CTR** = Paywall Clicks ÷ Paywall Impressions. Both r
 | **Title** | Article title | `cms.articles.title` (matches `page_title` on `page_view`) | |
 | **Publication Date** | Article publish date | `cms.articles.published_at` | 2025-01-01 → 2026-03-25 |
 | **Event Date** | Analytics date, UTC — the default time grain | `event_date_dt` / `session_partition_date` | 2025-04-01 → 2026-03-31 |
-| **Registration Date** | CRM account registration date — the time grain for reader-growth metrics | `cms.users.registration_date` | 2025-04-11 → 2026-02-28 |
-| **Subscription Date** | Subscription start date — the time grain for subscription metrics | `cms.users.subscription_date` | 2025-04-11 → 2026-03-20 |
+| **Registration Date** | CRM account registration date — the time grain for reader-growth metrics | `cms.users.registration_date` | 2025-04-12 → 2026-03-01 |
+| **Subscription Date** | Subscription start date — the time grain for subscription metrics | `cms.users.subscription_date` | 2025-04-12 → 2026-03-20 |
 | **Word Count** | Article word count | `cms.articles.word_count` | 350–2,400 |
 | **Author** | Article author | `cms.articles.author` | 12 authors |
 | **UTM Campaign** | `utm_campaign` captured on the session | `session_campaign` | weekly-digest, morning-brief, breaking-alert, morning-push, breaking-push, news-keywords, brand-awareness, subscription-drive, (none) |
-| **UTM Content** | `utm_content` captured on the session | `session_content` | wired end-to-end but ⚠️ the generator emits utm_source/medium/campaign/term only → `(none)` everywhere |
+| **UTM Content** | `utm_content` captured on the session | `session_content` | hero-article, top-story, footer-link (email) · ad-variant-a, ad-variant-b (cpc) · push-banner, deep-link (app-push); `(none)` for untagged sessions |
 | **Event Name** | Raw GA4 event name (event-level exploration) | `stg_ga4__events.event_name` | page_view, user_engagement, scroll, session_start, video_progress, video_start, share, first_visit, bookmark, comment, search, video_complete, newsletter_signup, subscribe |
-| **Paywall Type** | Wall variant served | `paywall_impression`/`paywall_click` param | 🧩 hard (premium sections, always walled) · metered (after 3 free reads/month) — lifestyle never walled |
-| **Bundle Offer** | Offer bundle presented on the paywall | same param | 🧩 tier-aligned: digital-only, basic, premium |
+| **Paywall Type** | Wall variant served | `paywall_impression`/`paywall_click` param | hard (business, politics, world — always walled) · metered (culture, opinion, sports, tech — after 3 free reads/month); lifestyle never walled |
+| **Bundle Offer** | Offer bundle presented on the paywall | same param | tier-aligned: digital-only, basic, premium |
 
 **Dimension applicability** (rules of thumb):
 
@@ -132,9 +132,9 @@ Companion ratio: **Paywall CTR** = Paywall Clicks ÷ Paywall Impressions. Both r
 | `readerTypes` | `fct_newsroom__articles_daily_by_reader_type` | Article Pageviews split by Reader Type / Tier | Reader Type, Subscription Tier + article dimensions |
 | `traffic` | `fct_newsroom__traffic_sources_daily` | Sessions, Pageviews, engaged time by channel | Channel Grouping, Traffic Source, Source Medium, Event Date |
 | `subscriptions` | `fct_newsroom__subscription_last_touch` | New Subscribers + last-touch attribution | Traffic Source, Source Medium, Platform, Device, Country, Tier, Event Date |
-| `crm` | `cms.users` | New Registered Users, New Subscribers, Number of…, New Churns (phase 2) | Country, Tier, Registration Date, Subscription Date |
+| `crm` | `cms.users` | New Registered Users, New Subscribers, Number of…, New Churns | Country, Tier, Registration Date, Subscription Date |
 | `content` | `cms.articles` | Number of Articles Published, Number of Articles | Section, Author, Publication Date, Word Count |
-| `paywall` (phase 2) | paywall events mart | Paywall Impressions, Clicks, Conversion Rate | Paywall Type, Bundle Offer + article dimensions |
+| `paywall` | `fct_newsroom__paywall_daily` ⋈ `fct_newsroom__paywall_sessions_daily` | Paywall Impressions, Clicks, CTR, sessions exposed (the conversion-rate denominator) | Paywall Type, Bundle Offer + article dimensions |
 
 ## Decisions (2026-09-01)
 
@@ -146,5 +146,7 @@ Companion ratio: **Paywall CTR** = Paywall Clicks ÷ Paywall Impressions. Both r
 
 ## Still open
 
-- **Section → wall mapping** — proposed: hard = business, politics, world · metered = culture, opinion, sports, tech · free = lifestyle. Confirm or reshuffle.
-- **UTM Content** — generator to emit `utm_content` variants (the dimension is wired but currently always `(none)`)?
+Nothing blocking — both open items shipped with the 2026-09-01 generator v2:
+
+- **Section → wall mapping** — shipped as proposed: hard = business, politics, world · metered = culture, opinion, sports, tech · free = lifestyle.
+- **UTM Content** — generator now emits `utm_content` variants on campaign landings (7 values across email / cpc / push).

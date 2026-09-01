@@ -30,3 +30,7 @@ sources:
           - name: registration_date
           - name: subscription_date
             description: When the reader subscribed (null for non-subscribers; separate from registration).
+          - name: is_subscriber
+            description: Active subscription at export snapshot — churn-aware (see churn_date).
+          - name: churn_date
+            description: When the subscription was cancelled (null = active). Churned subscribers keep subscription_date + churn_date with is_subscriber = false.

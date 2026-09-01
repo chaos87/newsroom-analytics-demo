@@ -1,7 +1,9 @@
 {#-
     Last-touch attribution for subscriptions.
 
-    One row per subscriber, driven by the GA4 `subscribe` event when present
+    One row per subscription — churned subscribers included (churn_date is
+    carried through): a cancelled subscription is still a conversion that
+    happened. Driven by the GA4 `subscribe` event when present
     (path A), falling back to CRM-only semantics otherwise (path B):
 
     Path A — subscribe event exists (generator ≥ conversion sessions):
@@ -44,8 +46,9 @@ with subscribers as (
         , user_pseudo_id
         , coalesce(subscription_date, registration_date) as subscription_date
         , subscription_tier
+        , churn_date
     from {{ source('cms', 'users') }}
-    where is_subscriber = true
+    where subscription_date is not null
 ),
 
 subscribe_events as (
@@ -211,6 +214,7 @@ select
     s.user_id
     , s.subscription_tier
     , s.subscription_date
+    , s.churn_date
     , case when ev.user_id is not null then 'subscribe_event' else 'crm_only' end
         as subscription_source
     , to_timestamp(ev.subscription_ts / 1000000.0) as subscription_timestamp

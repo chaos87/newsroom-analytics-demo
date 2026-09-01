@@ -4,9 +4,13 @@
     subscriber rows ('n/a' for registered / anonymous).
 
     reader_type is classified from the GA4 user_id carried on the event,
-    joined to the CRM export (cms.users):
-      - 'subscriber' : event user_id matches a CRM account with is_subscriber = true
-      - 'registered' : event user_id matches a CRM account without a subscription
+    joined to the CRM export (cms.users) — churn-aware as of the event date:
+      - 'subscriber' : event user_id matches a CRM account whose subscription
+                       is active on the event date (subscription_date ≤ event
+                       and churn_date null or later)
+      - 'registered' : event user_id matches a CRM account without an active
+                       subscription at that time (never-subscribed, pre-
+                       subscription, or churned)
       - 'anonymous'  : no user_id on the event (logged-out / consent-denied /
                        unknown readers) — including unmatched user_ids
 
@@ -82,12 +86,19 @@ classified as (
         , e.percent_scrolled
         , e.article_id
         , case
-            when u.user_id is not null and u.is_subscriber then 'subscriber'
+            when u.user_id is not null
+                 and u.subscription_date is not null
+                 and u.subscription_date <= e.event_date_dt
+                 and (u.churn_date is null or u.churn_date > e.event_date_dt)
+                then 'subscriber'
             when u.user_id is not null then 'registered'
             else 'anonymous'
         end as reader_type
         , case
-            when u.user_id is not null and u.is_subscriber
+            when u.user_id is not null
+                 and u.subscription_date is not null
+                 and u.subscription_date <= e.event_date_dt
+                 and (u.churn_date is null or u.churn_date > e.event_date_dt)
                 then coalesce(u.subscription_tier, 'unknown')
             else 'n/a'
         end as subscription_tier

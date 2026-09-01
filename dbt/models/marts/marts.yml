@@ -17,7 +17,9 @@ models:
     description: >
       Daily article performance split by reader type — subscriber /
       registered non-subscriber / anonymous — classified from the GA4 user_id
-      on each event joined to the CRM export. Subscribers are further split by
+      on each event joined to the CRM export, churn-aware as of the event
+      date (subscription_date ≤ event and churn_date null or later).
+      Subscribers are further split by
       subscription tier ('n/a' for registered / anonymous). One row per
       (event_date_dt, article_id, reader_type, subscription_tier).
     tests:
@@ -53,7 +55,9 @@ models:
         tests: [not_null]
   - name: fct_newsroom__subscription_last_touch
     description: >
-      Last-touch attribution for subscriptions: one row per subscriber. Driven
+      Last-touch attribution for subscriptions: one row per subscription,
+      churned subscribers included (churn_date carried through — a cancelled
+      subscription is still a conversion that happened). Driven
       by the GA4 `subscribe` paywall conversion event when present — exact
       subscription timestamp, the paywall article, the purchase session (the
       session containing the subscribe event) with platform, device, geo and
@@ -79,3 +83,47 @@ models:
         tests:
           - accepted_values:
               values: ['registered', 'anonymous']
+  - name: fct_newsroom__paywall_daily
+    description: >
+      Daily paywall funnel by article, wall variant and bundle offer: paywall
+      impressions and subscribe-CTA clicks served to non-subscribers. One row
+      per (event_date_dt, article_id, paywall_type, bundle_offer). Wall
+      variants: hard (premium sections, walled on every non-subscriber hit) /
+      metered (walled after 3 free article reads per calendar month).
+    columns:
+      - name: event_date_dt
+        tests: [not_null]
+      - name: article_id
+        tests: [not_null]
+      - name: paywall_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['hard', 'metered']
+      - name: bundle_offer
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['digital-only', 'basic', 'premium']
+      - name: paywall_impressions
+        tests: [not_null]
+      - name: paywall_clicks
+        tests: [not_null]
+  - name: fct_newsroom__paywall_sessions_daily
+    description: >
+      One row per session-day that served at least one paywall impression —
+      the exact denominator for Paywall Conversion Rate (New Subscribers ÷
+      sessions exposed to the paywall, METRICS.md). Carries the session's
+      wall impressions and CTA clicks.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - event_date_dt
+            - session_partition_key
+    columns:
+      - name: event_date_dt
+        tests: [not_null]
+      - name: session_partition_key
+        tests: [not_null]
+      - name: paywall_impressions
+        tests: [not_null]
