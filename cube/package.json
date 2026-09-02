@@ -1,0 +1,13 @@
+{
+  "name": "meridian-post-semantic-layer",
+  "private": true,
+  "description": "Cube.js semantic layer for The Meridian Post newsroom analytics demo — the catalog in METRICS.md encoded as cubes, measures and dimensions over the dbt marts.",
+  "scripts": {
+    "dev": "cubejs-server",
+    "start": "cubejs-server"
+  },
+  "dependencies": {
+    "@cubejs-backend/postgres-driver": "^1.7.32",
+    "@cubejs-backend/server": "^1.7.32"
+  }
+}

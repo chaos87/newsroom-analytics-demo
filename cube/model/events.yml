@@ -1,0 +1,50 @@
+cubes:
+  - name: events
+    title: Raw GA4 Events
+    description: >
+      Event-level GA4 export (stg_ga4__events) with CRM account state joined
+      per event. Powers Event Name analysis and the active-in-period reader
+      counts: Active Users, Active Registered Users, Active Subscribers.
+    sql: >
+      SELECT
+        e.event_date_dt AS event_date,
+        e.event_name,
+        e.client_key,
+        e.user_id,
+        e.page_location,
+        u.subscription_date AS crm_subscription_date,
+        u.churn_date AS crm_churn_date
+      FROM ga4_stg.stg_ga4__events e
+      LEFT JOIN cms.users u ON u.user_id = e.user_id
+    measures:
+      - name: eventsCount
+        type: count
+        title: Events
+      - name: activeUsers
+        type: countDistinct
+        sql: client_key
+        title: Active Users
+        description: Distinct readers (anonymous included) with at least one event in the period.
+      - name: activeRegisteredUsers
+        type: countDistinct
+        sql: user_id
+        title: Active Registered Users
+        description: Registered accounts (incl. subscribers) with at least one event in the period.
+      - name: activeSubscribers
+        type: number
+        sql: "COUNT(DISTINCT CASE WHEN {CUBE}.crm_subscription_date <= {CUBE}.event_date AND ({CUBE}.crm_churn_date IS NULL OR {CUBE}.crm_churn_date > {CUBE}.event_date) THEN {CUBE}.user_id END)"
+        title: Active Subscribers
+        description: Subscribers with an active subscription during the period and at least one event.
+    dimensions:
+      - name: eventName
+        sql: event_name
+        type: string
+        title: Event Name
+      - name: eventDate
+        sql: event_date
+        type: time
+        title: Event Date
+      - name: url
+        sql: page_location
+        type: string
+        title: URL

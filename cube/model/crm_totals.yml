@@ -1,0 +1,57 @@
+cubes:
+  - name: crmTotals
+    title: CRM Totals (as of date)
+    description: >
+      One row per day of the demo calendar with the CRM state as of that
+      date: cumulative registered accounts, cumulative subscription starts,
+      cumulative churns, and the resulting Number of Registered Users /
+      Number of Subscribers (churn-aware). Measures are `max` over the daily
+      as-of values, so they stay correct at any time granularity and any
+      date range — the value of the period is the state at its end.
+    sql: >
+      WITH days AS (
+        SELECT generate_series(
+          (SELECT MIN(event_date_dt) FROM ga4_stg.stg_ga4__events),
+          (SELECT MAX(event_date_dt) FROM ga4_stg.stg_ga4__events),
+          interval '1 day'
+        )::date AS as_of_date
+      )
+      SELECT
+        d.as_of_date,
+        (SELECT COUNT(*) FROM cms.users u
+          WHERE u.registration_date <= d.as_of_date) AS registered_total,
+        (SELECT COUNT(*) FROM cms.users u
+          WHERE u.subscription_date <= d.as_of_date) AS subscriber_starts_total,
+        (SELECT COUNT(*) FROM cms.users u
+          WHERE u.churn_date <= d.as_of_date) AS churned_total,
+        (SELECT COUNT(*) FROM cms.users u
+          WHERE u.subscription_date <= d.as_of_date)
+        - (SELECT COUNT(*) FROM cms.users u
+          WHERE u.churn_date <= d.as_of_date) AS active_subscribers_total
+      FROM days d
+    measures:
+      - name: numberOfRegisteredUsers
+        type: max
+        sql: registered_total
+        title: Number of Registered Users
+        description: Cumulative accounts registered as of the period end.
+      - name: cumulativeSubscribers
+        type: max
+        sql: subscriber_starts_total
+        title: Cumulative Subscribers
+        description: Cumulative subscription starts as of the period end.
+      - name: cumulativeChurns
+        type: max
+        sql: churned_total
+        title: Cumulative Churns
+        description: Cumulative cancellations as of the period end.
+      - name: numberOfSubscribers
+        type: number
+        sql: "(ARRAY_AGG(active_subscribers_total ORDER BY as_of_date DESC))[1]"
+        title: Number of Subscribers
+        description: Active subscriptions at the period end (starts minus churns, churn-aware). The value on the latest as-of date — not a max, since churns make the count non-monotonic.
+    dimensions:
+      - name: asOfDate
+        sql: as_of_date
+        type: time
+        title: As-of Date

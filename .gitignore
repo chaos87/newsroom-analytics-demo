@@ -24,3 +24,4 @@ dbt/profiles.yml
 # misc
 .DS_Store
 *.log
+.cubestore/

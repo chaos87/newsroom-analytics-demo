@@ -1,0 +1,39 @@
+cubes:
+  - name: pages
+    title: Pages
+    description: Page grain (fct_ga4__pages) — Pageviews and engagement by URL.
+    sql: >
+      SELECT
+        event_date_dt AS event_date,
+        page_location,
+        page_views,
+        entrances,
+        total_engagement_time_msec,
+        scroll_events
+      FROM ga4_marts.fct_ga4__pages
+    measures:
+      - name: pageviews
+        type: sum
+        sql: page_views
+        title: Pageviews
+      - name: entrances
+        type: sum
+        sql: entrances
+        title: Entrances
+      - name: engagedTime
+        type: sum
+        sql: "total_engagement_time_msec / 1000.0"
+        title: Engaged Time (sec)
+      - name: scrollEvents
+        type: sum
+        sql: scroll_events
+        title: Scroll Events
+    dimensions:
+      - name: url
+        sql: page_location
+        type: string
+        title: URL
+      - name: eventDate
+        sql: event_date
+        type: time
+        title: Event Date

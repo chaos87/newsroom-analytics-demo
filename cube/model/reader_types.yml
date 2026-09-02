@@ -1,0 +1,52 @@
+cubes:
+  - name: readerTypes
+    title: Article Performance by Reader Type
+    description: >
+      Daily article pageviews split by reader type (subscriber / registered /
+      anonymous) and subscription tier — the reader-type lens from the
+      fct_newsroom__articles_daily_by_reader_type mart.
+    sql: >
+      SELECT
+        event_date_dt AS event_date,
+        article_id,
+        reader_type,
+        subscription_tier,
+        title,
+        section,
+        page_views,
+        engagement_time_msec
+      FROM ga4_marts.fct_newsroom__articles_daily_by_reader_type
+    measures:
+      - name: articlePageviews
+        type: sum
+        sql: page_views
+        title: Article Pageviews
+      - name: engagedTime
+        type: sum
+        sql: "engagement_time_msec / 1000.0"
+        title: Engaged Time (sec)
+    dimensions:
+      - name: readerType
+        sql: reader_type
+        type: string
+        title: Reader Type
+      - name: subscriptionTier
+        sql: subscription_tier
+        type: string
+        title: Subscription Tier
+      - name: articleId
+        sql: article_id
+        type: number
+        title: Article ID
+      - name: title
+        sql: title
+        type: string
+        title: Title
+      - name: section
+        sql: section
+        type: string
+        title: Section
+      - name: eventDate
+        sql: event_date
+        type: time
+        title: Event Date

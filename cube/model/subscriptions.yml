@@ -1,0 +1,113 @@
+cubes:
+  - name: subscriptions
+    title: Subscriptions (Last Touch)
+    description: >
+      One row per subscription — last-touch attribution
+      (fct_newsroom__subscription_last_touch): the conversion session's
+      channel, device and geo, the paywall article, and the last article read
+      before converting. Churned subscribers included with their churn date.
+    sql: >
+      SELECT
+        user_id,
+        subscription_tier,
+        subscription_date,
+        churn_date,
+        subscription_source,
+        subscription_timestamp,
+        paywall_article_id,
+        purchase_session_date,
+        purchased_same_day,
+        platform,
+        device_category,
+        device_operating_system,
+        device_browser,
+        geo_country,
+        geo_region,
+        session_source,
+        session_medium,
+        session_campaign,
+        session_default_channel_grouping,
+        last_article_id,
+        last_article_section,
+        days_last_read_before_subscription
+      FROM ga4_marts.fct_newsroom__subscription_last_touch
+    measures:
+      - name: newSubscribers
+        type: count
+        title: New Subscribers
+        description: Accounts whose subscription started in the period.
+      - name: conversionsLaterChurned
+        type: count
+        filters:
+          - sql: "{CUBE}.churn_date IS NOT NULL"
+        title: Conversions Later Churned
+        description: Subscriptions from this period that have since cancelled.
+    dimensions:
+      - name: tier
+        sql: subscription_tier
+        type: string
+        title: Subscription Tier
+      - name: subscriptionSource
+        sql: subscription_source
+        type: string
+        title: Subscription Source
+      - name: subscriptionDate
+        sql: subscription_date
+        type: time
+        title: Subscription Date
+      - name: churnDate
+        sql: churn_date
+        type: time
+        title: Churn Date
+      - name: platform
+        sql: platform
+        type: string
+        title: Platform
+      - name: deviceCategory
+        sql: device_category
+        type: string
+        title: Device
+      - name: deviceOs
+        sql: device_operating_system
+        type: string
+        title: Device OS
+      - name: browser
+        sql: device_browser
+        type: string
+        title: Browser
+      - name: country
+        sql: geo_country
+        type: string
+        title: Country
+      - name: region
+        sql: geo_region
+        type: string
+        title: Region
+      - name: trafficSource
+        sql: session_source
+        type: string
+        title: Traffic Source
+      - name: sourceMedium
+        sql: session_medium
+        type: string
+        title: Source Medium
+      - name: utmCampaign
+        sql: session_campaign
+        type: string
+        title: UTM Campaign
+      - name: channelGrouping
+        sql: session_default_channel_grouping
+        type: string
+        title: Channel Grouping
+      - name: paywallArticleId
+        sql: paywall_article_id
+        type: number
+        title: Paywall Article ID
+      - name: purchasedSameDay
+        sql: purchased_same_day
+        type: boolean
+        title: Purchased Same Day
+      - name: lastArticleSection
+        sql: last_article_section
+        type: string
+        title: Last Article Section

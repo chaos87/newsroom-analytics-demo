@@ -1,0 +1,32 @@
+cubes:
+  - name: contentTotals
+    title: Article Inventory (as of date)
+    description: >
+      One row per day of the demo calendar with the cumulative count of
+      published articles as of that date. The measure is `max` over the
+      daily as-of values, so Number of Articles stays correct at any time
+      granularity and any date range.
+    sql: >
+      WITH days AS (
+        SELECT generate_series(
+          (SELECT MIN(event_date_dt) FROM ga4_stg.stg_ga4__events),
+          (SELECT MAX(event_date_dt) FROM ga4_stg.stg_ga4__events),
+          interval '1 day'
+        )::date AS as_of_date
+      )
+      SELECT
+        d.as_of_date,
+        (SELECT COUNT(*) FROM cms.articles a
+          WHERE a.published_at <= d.as_of_date) AS articles_total
+      FROM days d
+    measures:
+      - name: numberOfArticles
+        type: max
+        sql: articles_total
+        title: Number of Articles
+        description: Cumulative published inventory as of the period end.
+    dimensions:
+      - name: asOfDate
+        sql: as_of_date
+        type: time
+        title: As-of Date

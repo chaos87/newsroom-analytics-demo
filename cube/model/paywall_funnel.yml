@@ -1,0 +1,51 @@
+cubes:
+  - name: paywallFunnel
+    title: Paywall Funnel (daily)
+    description: >
+      Date-grain paywall funnel: sessions exposed to the paywall, CTA clicks
+      and same-day subscribe conversions — the home of Paywall Conversion
+      Rate (New Subscribers ÷ sessions with a paywall impression).
+    sql: >
+      SELECT
+        ps.event_date_dt AS event_date,
+        COUNT(*) AS sessions_exposed,
+        SUM(ps.paywall_impressions) AS impressions,
+        SUM(ps.paywall_clicks) AS clicks,
+        (
+          SELECT COUNT(*)
+          FROM ga4_marts.fct_newsroom__subscription_last_touch s
+          WHERE s.subscription_date = ps.event_date_dt
+        ) AS new_subscribers
+      FROM ga4_marts.fct_newsroom__paywall_sessions_daily ps
+      GROUP BY 1
+    measures:
+      - name: sessionsExposed
+        type: sum
+        sql: sessions_exposed
+        title: Sessions Exposed to Paywall
+      - name: impressions
+        type: sum
+        sql: impressions
+        title: Paywall Impressions
+      - name: clicks
+        type: sum
+        sql: clicks
+        title: Paywall Clicks
+      - name: newSubscribers
+        type: sum
+        sql: new_subscribers
+        title: New Subscribers
+        description: Subscriptions that started on an exposed session day.
+      - name: paywallConversionRate
+        type: number
+        sql: "{newSubscribers} / NULLIF({sessionsExposed}, 0)"
+        title: Paywall Conversion Rate
+      - name: ctr
+        type: number
+        sql: "{clicks} / NULLIF({impressions}, 0)"
+        title: Paywall CTR
+    dimensions:
+      - name: eventDate
+        sql: event_date
+        type: time
+        title: Event Date

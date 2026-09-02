@@ -1,0 +1,31 @@
+cubes:
+  - name: paywallSessions
+    title: Paywall-Exposed Sessions
+    description: >
+      One row per session-day that served at least one paywall impression
+      (fct_newsroom__paywall_sessions_daily) — the exact denominator for
+      Paywall Conversion Rate.
+    sql: >
+      SELECT
+        event_date_dt AS event_date,
+        session_partition_key,
+        paywall_impressions,
+        paywall_clicks
+      FROM ga4_marts.fct_newsroom__paywall_sessions_daily
+    measures:
+      - name: sessionsWithPaywallImpression
+        type: count
+        title: Sessions with Paywall Impression
+      - name: impressions
+        type: sum
+        sql: paywall_impressions
+        title: Paywall Impressions
+      - name: clicks
+        type: sum
+        sql: paywall_clicks
+        title: Paywall Clicks
+    dimensions:
+      - name: eventDate
+        sql: event_date
+        type: time
+        title: Event Date

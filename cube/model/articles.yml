@@ -1,0 +1,123 @@
+cubes:
+  - name: articles
+    title: Article Performance
+    description: >
+      Daily article performance (fct_newsroom__articles_daily) — GA4 pageviews
+      and engagement per article joined to the CMS export (title, section,
+      author, word count, publication date).
+    sql: >
+      SELECT
+        event_date_dt AS event_date,
+        article_id,
+        title,
+        section,
+        author,
+        published_at,
+        word_count,
+        is_breaking,
+        has_video,
+        page_views,
+        distinct_client_keys,
+        new_client_keys,
+        entrances,
+        scroll_events,
+        avg_scroll_percent,
+        share_events,
+        bookmark_events,
+        comment_events,
+        video_starts,
+        video_completes,
+        engagement_time_msec,
+        newsletter_signups
+      FROM ga4_marts.fct_newsroom__articles_daily
+    measures:
+      - name: articlePageviews
+        type: sum
+        sql: page_views
+        title: Article Pageviews
+      - name: readers
+        type: sum
+        sql: distinct_client_keys
+        title: Readers
+        description: Sum of per-day distinct readers — deduplicates within a day only.
+      - name: newReaders
+        type: sum
+        sql: new_client_keys
+        title: New Readers
+      - name: entrances
+        type: sum
+        sql: entrances
+        title: Entrances
+      - name: scrollEvents
+        type: sum
+        sql: scroll_events
+        title: Scroll Events
+      - name: avgScrollPercent
+        type: avg
+        sql: avg_scroll_percent
+        title: Avg Scroll Percent
+      - name: shares
+        type: sum
+        sql: share_events
+        title: Shares
+      - name: bookmarks
+        type: sum
+        sql: bookmark_events
+        title: Bookmarks
+      - name: comments
+        type: sum
+        sql: comment_events
+        title: Comments
+      - name: videoStarts
+        type: sum
+        sql: video_starts
+        title: Video Starts
+      - name: videoCompletes
+        type: sum
+        sql: video_completes
+        title: Video Completes
+      - name: engagedTime
+        type: sum
+        sql: "engagement_time_msec / 1000.0"
+        title: Engaged Time (sec)
+      - name: newsletterSignups
+        type: sum
+        sql: newsletter_signups
+        title: Newsletter Signups
+    dimensions:
+      - name: articleId
+        sql: article_id
+        type: number
+        title: Article ID
+      - name: title
+        sql: title
+        type: string
+        title: Title
+      - name: section
+        sql: section
+        type: string
+        title: Section
+      - name: author
+        sql: author
+        type: string
+        title: Author
+      - name: wordCount
+        sql: word_count
+        type: number
+        title: Word Count
+      - name: publicationDate
+        sql: published_at
+        type: time
+        title: Publication Date
+      - name: eventDate
+        sql: event_date
+        type: time
+        title: Event Date
+      - name: isBreaking
+        sql: is_breaking
+        type: boolean
+        title: Breaking News
+      - name: hasVideo
+        sql: has_video
+        type: boolean
+        title: Has Video

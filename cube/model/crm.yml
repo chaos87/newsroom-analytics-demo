@@ -1,0 +1,55 @@
+cubes:
+  - name: crm
+    title: CRM Accounts
+    description: >
+      The CRM export (cms.users) — reader growth and subscription lifecycle.
+      New counts bucket on the event date chosen (registration, subscription
+      or churn date). Cumulative Number-of metrics live in the companion
+      crmTotals cube (one row per day, as-of-date grain).
+    sql: >
+      SELECT
+        user_id,
+        registration_date,
+        subscription_date,
+        churn_date,
+        subscription_tier,
+        country
+      FROM cms.users
+    measures:
+      - name: newRegisteredUsers
+        type: count
+        title: New Registered Users
+        description: Accounts whose registration_date falls in the period.
+      - name: newSubscribers
+        type: count
+        filters:
+          - sql: "{CUBE}.subscription_date IS NOT NULL"
+        title: New Subscribers
+        description: Accounts whose subscription_date falls in the period.
+      - name: newChurns
+        type: count
+        filters:
+          - sql: "{CUBE}.churn_date IS NOT NULL"
+        title: New Churns
+        description: Subscriptions cancelled in the period.
+    dimensions:
+      - name: country
+        sql: country
+        type: string
+        title: Country
+      - name: tier
+        sql: subscription_tier
+        type: string
+        title: Subscription Tier
+      - name: registrationDate
+        sql: registration_date
+        type: time
+        title: Registration Date
+      - name: subscriptionDate
+        sql: subscription_date
+        type: time
+        title: Subscription Date
+      - name: churnDate
+        sql: churn_date
+        type: time
+        title: Churn Date

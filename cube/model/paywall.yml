@@ -1,0 +1,47 @@
+cubes:
+  - name: paywall
+    title: Paywall Funnel by Article
+    description: >
+      Daily paywall funnel by article, wall variant and bundle offer
+      (fct_newsroom__paywall_daily). Hard = premium sections walled on every
+      non-subscriber hit; metered = walled after 3 free article reads per
+      calendar month; lifestyle never walled.
+    sql: >
+      SELECT
+        event_date_dt AS event_date,
+        article_id,
+        paywall_type,
+        bundle_offer,
+        paywall_impressions,
+        paywall_clicks
+      FROM ga4_marts.fct_newsroom__paywall_daily
+    measures:
+      - name: impressions
+        type: sum
+        sql: paywall_impressions
+        title: Paywall Impressions
+      - name: clicks
+        type: sum
+        sql: paywall_clicks
+        title: Paywall Clicks
+      - name: ctr
+        type: number
+        sql: "{clicks} / NULLIF({impressions}, 0)"
+        title: Paywall CTR
+    dimensions:
+      - name: paywallType
+        sql: paywall_type
+        type: string
+        title: Paywall Type
+      - name: bundleOffer
+        sql: bundle_offer
+        type: string
+        title: Bundle Offer
+      - name: articleId
+        sql: article_id
+        type: number
+        title: Article ID
+      - name: eventDate
+        sql: event_date
+        type: time
+        title: Event Date

@@ -1,0 +1,57 @@
+cubes:
+  - name: content
+    title: Article Inventory
+    description: >
+      The CMS export (cms.articles) — editorial output. Articles Published
+      counts articles by publication date; the cumulative inventory (Number
+      of Articles) lives in the companion contentTotals cube (as-of-date
+      grain).
+    sql: >
+      SELECT
+        article_id,
+        title,
+        section,
+        author,
+        published_at,
+        word_count,
+        is_breaking,
+        has_video
+      FROM cms.articles
+    measures:
+      - name: articlesPublished
+        type: count
+        title: Number of Articles Published
+        description: Articles with publication date in the period.
+    dimensions:
+      - name: articleId
+        sql: article_id
+        type: number
+        title: Article ID
+      - name: title
+        sql: title
+        type: string
+        title: Title
+      - name: section
+        sql: section
+        type: string
+        title: Section
+      - name: author
+        sql: author
+        type: string
+        title: Author
+      - name: wordCount
+        sql: word_count
+        type: number
+        title: Word Count
+      - name: publicationDate
+        sql: published_at
+        type: time
+        title: Publication Date
+      - name: isBreaking
+        sql: is_breaking
+        type: boolean
+        title: Breaking News
+      - name: hasVideo
+        sql: has_video
+        type: boolean
+        title: Has Video

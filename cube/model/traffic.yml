@@ -1,0 +1,95 @@
+cubes:
+  - name: traffic
+    title: Traffic Sources
+    description: >
+      Session-grain acquisition analysis: GA4 default channel grouping plus
+      first-click (session) and 30-day last-non-direct attribution. Sessions
+      are distinct session keys — midnight-spanning sessions count once in
+      any date range, matching the Sessions cube exactly (the pre-aggregated
+      traffic mart counts session-days, which double-counts them).
+    sql: >
+      SELECT
+        d.session_partition_date,
+        d.session_key,
+        f.client_key,
+        d.session_default_channel_grouping,
+        d.session_source,
+        d.session_medium,
+        d.session_campaign,
+        d.session_content,
+        d.last_non_direct_source,
+        d.last_non_direct_medium,
+        d.last_non_direct_default_channel_grouping,
+        f.session_partition_count_page_views AS page_view_count,
+        CASE WHEN f.session_partition_max_session_engaged > 0
+             THEN 1 ELSE 0 END AS session_engaged_flag,
+        f.session_partition_sum_engagement_time_msec AS engagement_time_msec,
+        COALESCE(f.newsletter_signup_count, 0) AS newsletter_signup_count
+      FROM ga4_marts.dim_ga4__sessions_daily d
+      JOIN ga4_marts.fct_ga4__sessions_daily f USING (session_partition_key)
+    measures:
+      - name: sessions
+        type: countDistinct
+        sql: session_key
+        title: Sessions
+      - name: pageviews
+        type: sum
+        sql: page_view_count
+        title: Pageviews
+      - name: engagedSessions
+        type: sum
+        sql: session_engaged_flag
+        title: Engaged Sessions
+      - name: engagedTime
+        type: sum
+        sql: "engagement_time_msec / 1000.0"
+        title: Engaged Time (sec)
+      - name: newsletterSignups
+        type: sum
+        sql: newsletter_signup_count
+        title: Newsletter Signups
+      - name: activeUsers
+        type: countDistinct
+        sql: client_key
+        title: Active Users
+      - name: avgEngagedTimePerSession
+        type: number
+        sql: "{traffic.engagedTime} / NULLIF({traffic.sessions}, 0)"
+        title: Avg Engaged Time per Session (sec)
+    dimensions:
+      - name: eventDate
+        sql: session_partition_date
+        type: time
+        title: Event Date
+      - name: channelGrouping
+        sql: session_default_channel_grouping
+        type: string
+        title: Channel Grouping
+      - name: trafficSource
+        sql: session_source
+        type: string
+        title: Traffic Source
+      - name: sourceMedium
+        sql: session_medium
+        type: string
+        title: Source Medium
+      - name: utmCampaign
+        sql: session_campaign
+        type: string
+        title: UTM Campaign
+      - name: utmContent
+        sql: session_content
+        type: string
+        title: UTM Content
+      - name: lastNonDirectSource
+        sql: last_non_direct_source
+        type: string
+        title: Last Non-Direct Source
+      - name: lastNonDirectMedium
+        sql: last_non_direct_medium
+        type: string
+        title: Last Non-Direct Medium
+      - name: lastNonDirectChannelGrouping
+        sql: last_non_direct_default_channel_grouping
+        type: string
+        title: Last Non-Direct Channel Grouping

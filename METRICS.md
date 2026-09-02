@@ -41,6 +41,7 @@ Status: **v1.2 — 2026-09-01** · 21 metrics, 22 dimensions — paywall + churn
 Notes:
 - *Active Users* counts any-event users. The stricter GA4 refinement — users with ≥ 1 **engaged** session — is also computable (`is_session_engaged`); we ship any-event as the headline and can expose `Engaged Users` alongside.
 - Today **Pageviews = Article Pageviews** (70,373): the generator only emits article pages. The definitions stay distinct — homepage/section views will appear if the generator later emits them.
+- **638 page_view hits (0.9%) have no client/session key** (generator artifact): they count in Pageviews, Article Pageviews and Reader Type (70,373) but cannot be attributed to a session — session-grain pageviews are 69,735 in the Sessions / Traffic cubes.
 
 ### Reader growth & subscriptions
 
@@ -121,20 +122,24 @@ Companion ratio: **Paywall CTR** = Paywall Clicks ÷ Paywall Impressions. Both r
 - **Session context** — landing page, referrer, browser.
 - **Subscription last-touch** — conversion path (first-session / same-session / later-session), paywall article, days since last read, purchase-session channel/device/geo.
 
-## Planned Cube mapping (Cube.js YAML)
+## Cube mapping (Cube.js YAML — implemented in `cube/`)
 
 | Cube | Base model | Carries | Key dimensions |
 |---|---|---|---|
-| `events` | `stg_ga4__events` | Event Name analysis, raw event counts, paywall funnel (phase 2) | Event Name, Event Date, Url |
+| `events` | `stg_ga4__events` | Event Name analysis, raw event counts, active-in-period reader counts (Active Users, Active Registered Users, Active Subscribers — churn-aware) | Event Name, Event Date, Url |
 | `sessions` | `dim_ga4__sessions_daily` ⋈ `fct_ga4__sessions_daily` | Active Users, Sessions, Pageviews, engaged time, the per-user/per-session ratios | Country, Platform, Device, Device OS, Traffic Source, Source Medium, UTM Campaign, Event Date |
 | `pages` | `fct_ga4__pages` | Pageviews | Url, Event Date |
 | `articles` | `fct_newsroom__articles_daily` ⋈ `cms.articles` | Article Pageviews + article engagement | Article ID, Title, Author, Section, Word Count, Publication Date, Event Date |
 | `readerTypes` | `fct_newsroom__articles_daily_by_reader_type` | Article Pageviews split by Reader Type / Tier | Reader Type, Subscription Tier + article dimensions |
-| `traffic` | `fct_newsroom__traffic_sources_daily` | Sessions, Pageviews, engaged time by channel | Channel Grouping, Traffic Source, Source Medium, Event Date |
+| `traffic` | `dim_ga4__sessions_daily` ⋈ `fct_ga4__sessions_daily` (session grain) | Sessions, Pageviews, engaged time, Newsletter Signups by channel | Channel Grouping, Traffic Source, Source Medium, UTM Campaign, UTM Content, Event Date |
 | `subscriptions` | `fct_newsroom__subscription_last_touch` | New Subscribers + last-touch attribution | Traffic Source, Source Medium, Platform, Device, Country, Tier, Event Date |
-| `crm` | `cms.users` | New Registered Users, New Subscribers, Number of…, New Churns | Country, Tier, Registration Date, Subscription Date |
-| `content` | `cms.articles` | Number of Articles Published, Number of Articles | Section, Author, Publication Date, Word Count |
-| `paywall` | `fct_newsroom__paywall_daily` ⋈ `fct_newsroom__paywall_sessions_daily` | Paywall Impressions, Clicks, CTR, sessions exposed (the conversion-rate denominator) | Paywall Type, Bundle Offer + article dimensions |
+| `crm` | `cms.users` | New Registered Users, New Subscribers, New Churns | Country, Tier, Registration Date, Subscription Date, Churn Date |
+| `crmTotals` | day-spine over `cms.users` | Number of Registered Users, Number of Subscribers, Cumulative Subscribers / Churns — as of period end, churn-aware | As-of Date |
+| `content` | `cms.articles` | Number of Articles Published | Section, Author, Publication Date, Word Count |
+| `contentTotals` | day-spine over `cms.articles` | Number of Articles (cumulative inventory as of period end) | As-of Date |
+| `paywall` | `fct_newsroom__paywall_daily` | Paywall Impressions, Clicks, CTR by wall type + bundle offer | Paywall Type, Bundle Offer, Article ID, Event Date |
+| `paywallSessions` | `fct_newsroom__paywall_sessions_daily` | Sessions with ≥ 1 paywall impression — the conversion-rate denominator | Event Date |
+| `paywallFunnel` | day-grain funnel over paywall + subscription marts | Exposed sessions → clicks → same-day subscribers; **Paywall Conversion Rate** | Event Date |
 
 ## Decisions (2026-09-01)
 

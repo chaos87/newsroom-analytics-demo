@@ -1,0 +1,130 @@
+cubes:
+  - name: sessions
+    title: GA4 Sessions
+    description: >
+      Session grain (dim_ga4__sessions_daily joined to fct_ga4__sessions_daily).
+      The audience and engagement block: Active Users, Sessions, Pageviews,
+      engaged time and their per-user / per-session ratios, sliceable by geo,
+      device, platform and session traffic source.
+    sql: >
+      SELECT
+        d.session_partition_date,
+        d.session_key,
+        f.client_key,
+        d.geo_country,
+        d.platform,
+        d.device_category,
+        d.device_operating_system,
+        d.session_source,
+        d.session_medium,
+        d.session_campaign,
+        d.session_content,
+        d.session_default_channel_grouping,
+        d.last_non_direct_source,
+        d.last_non_direct_medium,
+        d.last_non_direct_default_channel_grouping,
+        d.landing_page_path,
+        f.session_partition_count_page_views AS page_view_count,
+        CASE WHEN f.session_partition_max_session_engaged > 0
+             THEN 1 ELSE 0 END AS session_engaged_flag,
+        f.session_partition_sum_engagement_time_msec AS engagement_time_msec
+      FROM ga4_marts.dim_ga4__sessions_daily d
+      JOIN ga4_marts.fct_ga4__sessions_daily f USING (session_partition_key)
+    measures:
+      - name: sessions
+        type: countDistinct
+        sql: session_key
+        title: Sessions
+      - name: activeUsers
+        type: countDistinct
+        sql: client_key
+        title: Active Users
+      - name: engagedSessions
+        type: sum
+        sql: session_engaged_flag
+        title: Engaged Sessions
+      - name: pageviews
+        type: sum
+        sql: page_view_count
+        title: Pageviews
+      - name: engagedTime
+        type: sum
+        sql: "engagement_time_msec / 1000.0"
+        title: Engaged Time (sec)
+      - name: avgEngagedTimePerUser
+        type: number
+        sql: "{engagedTime} / NULLIF({activeUsers}, 0)"
+        title: Avg Engaged Time per User (sec)
+      - name: avgEngagedTimePerSession
+        type: number
+        sql: "{engagedTime} / NULLIF({sessions}, 0)"
+        title: Avg Engaged Time per Session (sec)
+      - name: pageviewsPerUser
+        type: number
+        sql: "{pageviews} / NULLIF({activeUsers}, 0)"
+        title: Pageviews per User
+      - name: pageviewsPerSession
+        type: number
+        sql: "{pageviews} / NULLIF({sessions}, 0)"
+        title: Pageviews per Session
+      - name: sessionsPerUser
+        type: number
+        sql: "{sessions} / NULLIF({activeUsers}, 0)"
+        title: Sessions per User
+    dimensions:
+      - name: eventDate
+        sql: session_partition_date
+        type: time
+        title: Event Date
+      - name: country
+        sql: geo_country
+        type: string
+        title: Country
+      - name: platform
+        sql: platform
+        type: string
+        title: Platform
+      - name: device
+        sql: device_category
+        type: string
+        title: Device
+      - name: deviceOs
+        sql: device_operating_system
+        type: string
+        title: Device OS
+      - name: trafficSource
+        sql: session_source
+        type: string
+        title: Traffic Source
+      - name: sourceMedium
+        sql: session_medium
+        type: string
+        title: Source Medium
+      - name: utmCampaign
+        sql: session_campaign
+        type: string
+        title: UTM Campaign
+      - name: utmContent
+        sql: session_content
+        type: string
+        title: UTM Content
+      - name: channelGrouping
+        sql: session_default_channel_grouping
+        type: string
+        title: Channel Grouping
+      - name: lastNonDirectSource
+        sql: last_non_direct_source
+        type: string
+        title: Last Non-Direct Source
+      - name: lastNonDirectMedium
+        sql: last_non_direct_medium
+        type: string
+        title: Last Non-Direct Medium
+      - name: lastNonDirectChannelGrouping
+        sql: last_non_direct_default_channel_grouping
+        type: string
+        title: Last Non-Direct Channel Grouping
+      - name: landingPage
+        sql: landing_page_path
+        type: string
+        title: Landing Page
