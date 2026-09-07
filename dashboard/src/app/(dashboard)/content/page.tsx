@@ -129,7 +129,9 @@ export default function ContentPage() {
 
         <ChartCard title="Top articles" subtitle="Most-read pieces in range" grow className="lg:col-span-2">
           <QueryState isLoading={topArticlesQ.isLoading} isEmpty={topArticles.length === 0}>
-            <BarList data={topArticles} valueFormatter={(v: number) => formattedNumber(v)} />
+            <div className="h-full overflow-y-auto pr-1">
+              <BarList data={topArticles} valueFormatter={(v: number) => formattedNumber(v)} />
+            </div>
           </QueryState>
         </ChartCard>
 

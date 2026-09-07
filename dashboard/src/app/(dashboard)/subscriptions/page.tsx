@@ -159,7 +159,9 @@ export default function SubscriptionsPage() {
 
         <ChartCard title="Where subs come from" subtitle="New subscribers by purchase-session channel" grow>
           <QueryState isLoading={channelQ.isLoading} isEmpty={channels.length === 0}>
-            <BarList data={channels} valueFormatter={(v: number) => formattedNumber(v)} />
+            <div className="h-full overflow-y-auto pr-1">
+              <BarList data={channels} valueFormatter={(v: number) => formattedNumber(v)} />
+            </div>
           </QueryState>
         </ChartCard>
 

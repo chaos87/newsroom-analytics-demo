@@ -151,11 +151,13 @@ export default function AudiencePage() {
 
         <ChartCard title="Top traffic sources" subtitle="Session first-click source" grow>
           <QueryState isLoading={sourcesQ.isLoading} isEmpty={sources.length === 0}>
-            <BarList
-              data={sources.slice(0, 8)}
-              color="gray"
-              valueFormatter={(v: number) => formattedNumber(v)}
-            />
+            <div className="h-full overflow-y-auto pr-1">
+              <BarList
+                data={sources.slice(0, 8)}
+                color="gray"
+                valueFormatter={(v: number) => formattedNumber(v)}
+              />
+            </div>
           </QueryState>
         </ChartCard>
 
@@ -167,11 +169,13 @@ export default function AudiencePage() {
 
         <ChartCard title="Top countries" subtitle="Sessions by country" grow>
           <QueryState isLoading={countriesQ.isLoading} isEmpty={countries.length === 0}>
-            <BarList
-              data={countries}
-              color="gray"
-              valueFormatter={(v: number) => formattedNumber(v)}
-            />
+            <div className="h-full overflow-y-auto pr-1">
+              <BarList
+                data={countries}
+                color="gray"
+                valueFormatter={(v: number) => formattedNumber(v)}
+              />
+            </div>
           </QueryState>
         </ChartCard>
 

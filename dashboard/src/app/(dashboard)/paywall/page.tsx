@@ -158,10 +158,12 @@ export default function PaywallPage() {
 
         <ChartCard title="Bundle offers" subtitle="CTA clicks by offer bundle shown" grow>
           <QueryState isLoading={byOfferQ.isLoading} isEmpty={byOffer.length === 0}>
-            <BarList
-              data={byOffer}
-              valueFormatter={(v: number) => formattedNumber(v)}
-            />
+            <div className="h-full overflow-y-auto pr-1">
+              <BarList
+                data={byOffer}
+                valueFormatter={(v: number) => formattedNumber(v)}
+              />
+            </div>
           </QueryState>
         </ChartCard>
 
