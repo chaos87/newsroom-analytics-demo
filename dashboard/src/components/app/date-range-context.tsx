@@ -9,6 +9,10 @@ export interface DateRange {
 
 export const FULL_YEAR: DateRange = { from: "2025-04-01", to: "2026-03-31" };
 
+/** Bounds of the demo dataset — calendar + presets are clamped to this window. */
+export const DATA_MIN = "2025-04-01";
+export const DATA_MAX = "2026-03-31";
+
 const PRESETS: { label: string; from: string; to: string }[] = [
   { label: "Full year (Apr '25 – Mar '26)", from: "2025-04-01", to: "2026-03-31" },
   { label: "Last 90 days", from: "2026-01-01", to: "2026-03-31" },

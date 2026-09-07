@@ -13,6 +13,7 @@ import {
   type DateRange,
   FULL_YEAR,
 } from "./date-range-context";
+import { DateRangeCalendar } from "./date-range-calendar";
 
 function matchesPreset(range: DateRange, preset: DateRange) {
   return range.from === preset.from && range.to === preset.to;
@@ -42,27 +43,30 @@ export function PageHeader({
         </h1>
         {subtitle ? <p className="mt-1 text-sm text-ink-soft">{subtitle}</p> : null}
       </div>
-      <div className="w-full md:w-72">
-        <Select
-          value={current}
-          onValueChange={(label) => {
-            const p = PRESETS.find((x) => x.label === label);
-            if (p) setDateRange({ from: p.from, to: p.to });
-            else setDateRange(FULL_YEAR);
-          }}
-          aria-label="Date range"
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PRESETS.map((p) => (
-              <SelectItem key={p.label} value={p.label}>
-                {p.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex w-full items-start gap-2 md:w-auto md:justify-end">
+        <div className="w-full md:w-72">
+          <Select
+            value={current}
+            onValueChange={(label) => {
+              const p = PRESETS.find((x) => x.label === label);
+              if (p) setDateRange({ from: p.from, to: p.to });
+              else setDateRange(FULL_YEAR);
+            }}
+            aria-label="Date range"
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue>{current}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {PRESETS.map((p) => (
+                <SelectItem key={p.label} value={p.label}>
+                  {p.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <DateRangeCalendar value={dateRange} onChange={setDateRange} />
       </div>
     </header>
   );
