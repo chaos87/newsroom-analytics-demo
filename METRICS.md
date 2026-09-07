@@ -8,9 +8,9 @@ Status: **v1.2 — 2026-09-01** · 21 metrics, 22 dimensions — paywall + churn
 
 | Layer | Facts |
 |---|---|
-| Raw GA4 export (`analytics_3847629104`) | 204,388 events · 42,117 sessions · 3,323 first visits · Apr 2025 → Mar 2026 · 16 event types |
+| Raw GA4 export (`analytics_3847629104`) | 207,624 events · 41,889 sessions · 3,236 first visits · Apr 2025 → Mar 2026 · 16 event types |
 | CMS export (`cms.articles`) | 1,000 articles · 12 authors · 8 sections · published 2025-01-01 → 2026-03-25 · 350–2,400 words |
-| CRM export (`cms.users`) | 350 registered accounts · 256 subscribers (204 active · 52 churned) · tiers: digital-only / basic / premium |
+| CRM export (`cms.users`) | 577 registered accounts · 305 subscribers ever (204 active at export end · 101 churned in-window) · 227 subscribers predate the window · tiers: digital-only / basic / premium |
 | dbt marts (`ga4_marts`) | sessions, pages, traffic sources, articles daily, reader types, subscription last-touch, paywall funnel (daily + exposed sessions) |
 
 ## Conventions
@@ -40,8 +40,8 @@ Status: **v1.2 — 2026-09-01** · 21 metrics, 22 dimensions — paywall + churn
 
 Notes:
 - *Active Users* counts any-event users. The stricter GA4 refinement — users with ≥ 1 **engaged** session — is also computable (`is_session_engaged`); we ship any-event as the headline and can expose `Engaged Users` alongside.
-- Today **Pageviews = Article Pageviews** (70,373): the generator only emits article pages. The definitions stay distinct — homepage/section views will appear if the generator later emits them.
-- **638 page_view hits (0.9%) have no client/session key** (generator artifact): they count in Pageviews, Article Pageviews and Reader Type (70,373) but cannot be attributed to a session — session-grain pageviews are 69,735 in the Sessions / Traffic cubes.
+- Today **Pageviews = Article Pageviews** (71,337): the generator only emits article pages. The definitions stay distinct — homepage/section views will appear if the generator later emits them.
+- **448 page_view hits (0.6%) have no client/session key** (generator artifact): they count in Pageviews, Article Pageviews and Reader Type (71,337) but cannot be attributed to a session — session-grain pageviews are 70,889 in the Sessions / Traffic cubes.
 
 ### Reader growth & subscriptions
 
@@ -57,7 +57,7 @@ Notes:
 
 Notes:
 - *New Subscribers* is available both CRM-side (date grain) and GA4-side (`subscribe` event → exact timestamp, purchase session, attribution). The GA4 side powers the source/device/geo slices.
-- **Churn (shipped):** `churn_date` on the CRM — 52 of 256 subscribers cancelled (May 2025 → Mar 2026, each ≥ 1 billing cycle after subscribing). *New Churns* counts cancellations in period; *Active/Number of Subscribers* are churn-aware; churned readers classify as 'registered' from their churn date. Churn stays CRM-side (no GA4 churn event).
+- **Churn (shipped):** `churn_date` on the CRM — 101 of 305 subscribers cancelled in-window (Apr 2025 → Mar 2026, each ≥ 1 billing cycle after subscribing; the 227-reader pre-window base churns too). *New Churns* counts cancellations in period; *Active/Number of Subscribers* are churn-aware; churned readers classify as 'registered' from their churn date. Churn stays CRM-side (no GA4 churn event).
 - *Active Registered/Subscribers* deliberately mirror the reader-type lens (anonymous / registered / subscriber) used by `fct_newsroom__articles_daily_by_reader_type`.
 
 ### Content
@@ -79,7 +79,7 @@ Notes:
 
 Companion ratio: **Paywall CTR** = Paywall Clicks ÷ Paywall Impressions. Both ratios break down by Paywall Type and Bundle Offer — *which wall converts* is the dashboard story.
 
-**In the demo year:** 31,977 impressions (hard 26,899 · metered 5,078) → 1,614 clicks (CTR 5.1%: hard 4.7% · metered 7.0%) → 256 subscribers across 25,615 paywall-exposed sessions — **1.0% session conversion rate**. Every conversion runs the full funnel: impression → click → subscribe in the same session, bundle shown = tier bought.
+**In the demo year:** 28,036 impressions (hard 24,010 · metered 4,026) → 1,321 clicks (CTR 4.7%: hard 4.3% · metered 7.4%) → 78 subscribers across 22,556 paywall-exposed sessions — **0.35% session conversion rate** (industry benchmark for news subscriptions). Conversions complete multi-touch journeys: the reader hits the wall 2–11 times (median 6) across multiple sessions and days (median ~10 weeks from first wall to subscribe) before impression → click → subscribe in the converting session; some journeys never complete in-window. A base of 227 subscribers predates the window: the paying base starts ~226 active and ends ~204 (78 new − 101 churned in-window), bundle shown = tier bought.
 
 ## Dimensions
 
