@@ -208,9 +208,47 @@ last_read_ranked as (
             order by path_priority, event_timestamp desc
           ) as rn
     from last_reads
-)
+),
 
-select
+wall_impressions as (
+    -- every wall exposure in the reader's client-stitched history up to the
+    -- subscription date (identity: one stable user_pseudo_id across the
+    -- anonymous -> subscribed lifetime)
+    select
+        se.subscriber_user_id
+        , se.session_partition_key
+        , se.event_timestamp
+    from subscriber_events se
+    where se.event_name = 'paywall_impression'
+),
+
+prior_wall_counts as (
+    -- wall impressions on earlier visits, strictly before the purchase
+    -- session starts (the purchase session's own impression is the one
+    -- that completes the journey)
+    select
+        w.subscriber_user_id
+        , count(*) filter (where w.event_timestamp < ps.purchase_session_ts)
+            as prior_wall_impressions
+    from wall_impressions w
+    join purchase_session_ranked ps
+        on ps.subscriber_user_id = w.subscriber_user_id
+       and ps.rn = 1
+    group by 1
+),
+
+first_wall_sessions as (
+    -- the reader's first-ever wall session
+    select distinct on (subscriber_user_id)
+        subscriber_user_id
+        , session_partition_key as first_wall_session_key
+        , event_timestamp as first_wall_ts
+    from wall_impressions
+    order by subscriber_user_id, event_timestamp, session_partition_key
+),
+
+subscription_rows as (
+    select
     s.user_id
     , s.subscription_tier
     , s.subscription_date
@@ -224,6 +262,12 @@ select
     , ps.purchase_session_date
     , to_timestamp(ps.purchase_session_ts / 1000000.0) as purchase_session_start
     , (ps.purchase_session_date = s.subscription_date) as purchased_same_day
+    , fw.first_wall_session_key
+    , pw_count.prior_wall_impressions
+    , case
+        when fw.first_wall_ts is not null
+            then s.subscription_date - to_timestamp(fw.first_wall_ts / 1000000.0)::date
+      end as days_first_wall_to_sub
     , ps.platform
     , ps.device_category
     , ps.device_operating_system
@@ -259,3 +303,26 @@ left join {{ source('cms', 'articles') }} a
     on a.article_id = la.article_id
 left join {{ source('cms', 'articles') }} pw
     on pw.article_id = cast(ev.paywall_article_id as integer)
+left join prior_wall_counts pw_count
+    on pw_count.subscriber_user_id = s.user_id
+left join first_wall_sessions fw
+    on fw.subscriber_user_id = s.user_id
+),
+
+journey_medians as (
+    select
+        percentile_cont(0.5) within group (order by prior_wall_impressions)
+            as median_prior_wall_impressions,
+        percentile_cont(0.5) within group (order by days_first_wall_to_sub)
+            as median_days_first_wall_to_sub
+    from subscription_rows
+)
+
+select
+    r.*
+    , (r.purchase_session_key = r.first_wall_session_key)
+        as converted_on_first_wall_session
+    , m.median_prior_wall_impressions
+    , m.median_days_first_wall_to_sub
+from subscription_rows r
+cross join journey_medians m

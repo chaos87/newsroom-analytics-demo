@@ -84,12 +84,19 @@ export default function SubscriptionsPage() {
 
   const pathQ = useCubeQuery({
     measures: ["subscriptions.newSubscribers"],
-    dimensions: ["subscriptions.purchasedSameDay"],
+    dimensions: ["subscriptions.convertedOnFirstWallSession"],
+    timeDimensions: [{ dimension: "subscriptions.subscriptionDate", dateRange: range }],
+  });
+  const journeyQ = useCubeQuery({
+    measures: [
+      "subscriptions.medianPriorWallImpressions",
+      "subscriptions.medianDaysFirstWallToSub",
+    ],
     timeDimensions: [{ dimension: "subscriptions.subscriptionDate", dateRange: range }],
   });
   const path = breakdown(
     pathQ.resultSet,
-    "Subscriptions.purchasedSameDay",
+    "Subscriptions.convertedOnFirstWallSession",
     "Subscriptions.newSubscribers"
   );
 
@@ -105,8 +112,10 @@ export default function SubscriptionsPage() {
     })
   );
 
-  const sameDay = path.find((p) => String(p.name) === "true")?.value ?? 0;
-  const later = path.find((p) => String(p.name) === "false")?.value ?? 0;
+  const firstWall = path.find((p) => String(p.name) === "true")?.value ?? 0;
+  const afterPrior = path.find((p) => String(p.name) === "false")?.value ?? 0;
+  const medianPrior = num(journeyQ.resultSet, "Subscriptions.medianPriorWallImpressions");
+  const medianDays = num(journeyQ.resultSet, "Subscriptions.medianDaysFirstWallToSub");
 
   return (
     <div className="space-y-6">
@@ -171,11 +180,14 @@ export default function SubscriptionsPage() {
           className="lg:col-span-2"
         >
           <div className="flex flex-wrap items-center gap-4 pt-1">
-            <Badge variant="neutral">{sameDay} same-day</Badge>
-            <Badge variant="neutral">{later} on a later visit</Badge>
+            <Badge variant="neutral">{firstWall} on their first wall visit</Badge>
+            <Badge variant="neutral">{afterPrior} after earlier wall visits</Badge>
             <p className="text-sm text-ink-soft">
-              {formatPercent(sameDay / Math.max(sameDay + later, 1), 1)} of new subscribers convert in
-              the same session they first hit the wall.
+              {formatPercent(firstWall / Math.max(firstWall + afterPrior, 1), 1)} of new
+              subscribers convert in the session they first hit the wall — the rest decide
+              on later visits, after a median of {medianPrior ?? "—"} earlier wall
+              impressions and ~{medianDays != null ? Math.round(medianDays / 7) : "—"} weeks
+              from first wall to subscribe.
             </p>
           </div>
         </ChartCard>

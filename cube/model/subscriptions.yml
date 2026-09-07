@@ -42,6 +42,21 @@ cubes:
           - sql: "{CUBE}.churn_date IS NOT NULL"
         title: Conversions Later Churned
         description: Subscriptions from this period that have since cancelled.
+      - name: avgPriorWallImpressions
+        sql: prior_wall_impressions
+        type: average
+        title: Avg Prior Wall Impressions
+        description: Average wall impressions on earlier visits before converting.
+      - name: medianPriorWallImpressions
+        sql: median_prior_wall_impressions
+        type: min
+        title: Median Prior Wall Impressions
+        description: Median wall impressions on earlier visits (constant per row, computed in the mart).
+      - name: medianDaysFirstWallToSub
+        sql: median_days_first_wall_to_sub
+        type: min
+        title: Median Days First Wall To Subscribe
+        description: Median days from the reader's first paywall impression to the subscription (constant per row, computed in the mart).
     dimensions:
       - name: tier
         sql: subscription_tier
@@ -107,6 +122,17 @@ cubes:
         sql: purchased_same_day
         type: boolean
         title: Purchased Same Day
+        description: Always true — the purchase session defines the subscription date. Kept for backward compatibility; use convertedOnFirstWallSession instead.
+      - name: convertedOnFirstWallSession
+        sql: converted_on_first_wall_session
+        type: boolean
+        title: Converted On First Wall Session
+        description: True when the reader subscribed in the same session they first-ever hit the paywall. With multi-touch journeys this is ~0% — most subscribers convert on a later visit.
+      - name: priorWallImpressions
+        sql: prior_wall_impressions
+        type: number
+        title: Prior Wall Impressions
+        description: Wall impressions on earlier visits, strictly before the purchase session started.
       - name: lastArticleSection
         sql: last_article_section
         type: string
