@@ -44,7 +44,7 @@ cubes:
         description: Subscriptions from this period that have since cancelled.
       - name: avgPriorWallImpressions
         sql: prior_wall_impressions
-        type: average
+        type: avg
         title: Avg Prior Wall Impressions
         description: Average wall impressions on earlier visits before converting.
       - name: medianPriorWallImpressions
