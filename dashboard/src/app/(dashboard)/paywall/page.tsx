@@ -132,22 +132,26 @@ export default function PaywallPage() {
 
         <ChartCard title="Which wall converts" subtitle="Impressions & clicks by paywall type" grow>
           <QueryState isLoading={byTypeQ.isLoading} isEmpty={byType.data.length === 0}>
-            <BarChart
-              data={byType.data}
-              index="name"
-              categories={["Impressions", "Clicks"]}
-              colors={["gray", "accent"]}
-              autoMinValue
-            />
-            <div className="mt-3 flex gap-6">
-              {byType.rows.map((row) => (
-                <p key={row.name} className="text-xs text-ink-soft">
-                  <span className="font-medium capitalize text-ink">{row.name}</span> CTR:{" "}
-                  <span className="font-medium tabular-nums text-ink">
-                    {formatPercent(row.ctr)}
-                  </span>
-                </p>
-              ))}
+            <div className="flex h-full flex-col">
+              <div className="min-h-0 flex-1">
+                <BarChart
+                  data={byType.data}
+                  index="name"
+                  categories={["Impressions", "Clicks"]}
+                  colors={["gray", "accent"]}
+                  autoMinValue
+                />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1">
+                {byType.rows.map((row) => (
+                  <p key={row.name} className="text-xs text-ink-soft">
+                    <span className="font-medium capitalize text-ink">{row.name}</span> CTR:{" "}
+                    <span className="font-medium tabular-nums text-ink">
+                      {formatPercent(row.ctr)}
+                    </span>
+                  </p>
+                ))}
+              </div>
             </div>
           </QueryState>
         </ChartCard>
