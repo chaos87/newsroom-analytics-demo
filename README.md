@@ -2,6 +2,8 @@
 
 **A GA4-native web analytics pipeline for a fictional digital newspaper — *The Meridian Post* — running the real GA4 export schema on Neon PostgreSQL with a ported dbt-ga4 transformation layer.**
 
+🔴 **[Live dashboard](https://meridian-dashboard-liard.vercel.app)** — Overview, Audience, Paywall, Content and Subscriptions over the full demo year, with a global date-range selector (including a custom calendar picker).
+
 Most analytics portfolios point at tired CSV samples. This one is different: the raw layer **is the GA4 BigQuery export schema** — the exact `events_*` table structure Google ships ([schema reference](https://support.google.com/analytics/answer/7029846)) — populated with a full year (2025-04-01 → 2026-03-31) of synthetic but realistic newsroom traffic: breaking-news spikes, weekend dips, email/push campaigns with real UTM payloads, consent-denied hits, late-arriving data patterns. On top of it sits the [Velir/dbt-ga4](https://github.com/Velir/dbt-ga4) transformation package, ported to PostgreSQL, running its daily incremental models — including 30-day last-non-direct session attribution.
 
 ## Architecture
@@ -100,7 +102,7 @@ CI needs `DBT_HOST`, `DBT_USER`, `DBT_PASSWORD`, `DBT_DBNAME` as repository secr
 
 `METRICS.md` is the catalog: every metric and dimension is defined there **before** it is encoded. [Cube.js](https://cube.dev) cubes in `cube/model/` are generated from those definitions — 14 cubes covering audience, content, paywall funnel, CRM growth and subscriptions. The semantic layer runs on Cloud Run (JWT-only, no dev mode; deploys via `.github/workflows/deploy-cube.yml` on changes to `cube/**`).
 
-The dashboard in `dashboard/` is a Next.js App Router app built with [Tremor Raw](https://github.com/tremorlabs/tremor) copy-paste components (Radix + Tailwind v4, charts on Recharts) and `@cubejs-client/react`. Five pages — **Overview, Audience, Paywall, Content, Subscriptions** — with a global date-range selector. A Next.js route handler (`/api/cube-token`) mints the Cube JWT server-side; the API secret never reaches the browser. Every headline number on the dashboard reconciles to the control figures above.
+The dashboard in `dashboard/` is a Next.js App Router app built with [Tremor Raw](https://github.com/tremorlabs/tremor) copy-paste components (Radix + Tailwind v4, charts on Recharts) and `@cubejs-client/react` — deployed live at [meridian-dashboard-liard.vercel.app](https://meridian-dashboard-liard.vercel.app). Five pages — **Overview, Audience, Paywall, Content, Subscriptions** — with a global date-range selector. A Next.js route handler (`/api/cube-token`) mints the Cube JWT server-side; the API secret never reaches the browser. Every headline number on the dashboard reconciles to the control figures above.
 
 ```bash
 # run the dashboard locally (against the deployed Cube API)
