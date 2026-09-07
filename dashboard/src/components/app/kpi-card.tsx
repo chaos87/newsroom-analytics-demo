@@ -3,13 +3,15 @@
 import { Card } from "@/components/Card/Card";
 import { formattedNumber, formatPercent, formatDuration, compactNumber } from "@/lib/format";
 
-type KpiFormat = "number" | "compact" | "percent" | "duration";
+type KpiFormat = "number" | "compact" | "percent" | "duration" | "decimal";
 
 function renderValue(value: number | null | undefined, format: KpiFormat): string {
   if (value == null || Number.isNaN(value)) return "—";
   switch (format) {
     case "percent":
       return formatPercent(value);
+    case "decimal":
+      return value.toFixed(2);
     case "duration":
       return formatDuration(value);
     case "compact":

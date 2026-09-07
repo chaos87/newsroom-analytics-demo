@@ -178,7 +178,7 @@ export default function PaywallPage() {
               categories={ctrTrend.categories}
               colors={["accent"]}
               autoMinValue
-              valueFormatter={(v: number) => `${v.toFixed(2)}%`}
+              valueFormatter={(v: number) => `${(v * 100).toFixed(2)}%`}
             />
           </QueryState>
         </ChartCard>

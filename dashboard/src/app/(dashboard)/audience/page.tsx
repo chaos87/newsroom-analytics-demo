@@ -111,10 +111,12 @@ export default function AudiencePage() {
         <KpiCard
           label="Pages / Session"
           value={num(totals.resultSet, "Sessions.pageviewsPerSession")}
+          format="decimal"
         />
         <KpiCard
           label="Sessions / User"
           value={num(totals.resultSet, "Sessions.sessionsPerUser")}
+          format="decimal"
         />
       </div>
 
