@@ -81,6 +81,8 @@ Companion ratio: **Paywall CTR** = Paywall Clicks ÷ Paywall Impressions. Both r
 
 **In the demo year:** 28,190 impressions (hard ~24.2k · metered ~4.2k) → 1,327 clicks (CTR 4.7%) → 78 subscribers across 22,721 paywall-exposed sessions — **0.35% session conversion rate** (industry benchmark for news subscriptions). Conversions complete multi-touch journeys: the reader hits the wall 2–12 times (median 6) across multiple sessions and days (median ~10 weeks from first wall to subscribe) before impression → click → subscribe in the converting session; some journeys never complete in-window. A base of 185 subscribers predates the window: the paying base starts ~185 active and ends ~210 (78 new − 53 churned in-window — net positive, +13% over the year), bundle shown = tier bought.
 
+*Conversion paths:* 0 of 78 in-window subscribers converted in their first wall session — all 78 decided on later visits (median 6.5 prior wall impressions, ~10 weeks from first wall to subscribe). Fields: `converted_on_first_wall_session` · `prior_wall_impressions` in `fct_newsroom__subscription_last_touch` (the old `purchased_same_day` was a tautology — purchase session date equals subscription date by definition — and never measured the first wall hit).
+
 ## Dimensions
 
 | Dimension | Definition | Source | Values in the demo |
