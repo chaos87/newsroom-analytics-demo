@@ -64,11 +64,15 @@ export default function PaywallPage() {
     measures: ["paywallFunnel.impressions", "paywallFunnel.clicks", "paywallFunnel.ctr"],
     timeDimensions: [{ dimension: "paywallFunnel.eventDate", dateRange: range, granularity: grain }],
   });
-  const trendData = trend(trendQ.resultSet, {
-    "PaywallFunnel.impressions": "Impressions",
-    "PaywallFunnel.clicks": "Clicks",
-  });
-  const ctrTrend = trend(trendQ.resultSet, { "PaywallFunnel.ctr": "CTR" });
+  const trendData = trend(
+    trendQ.resultSet,
+    {
+      "PaywallFunnel.impressions": "Impressions",
+      "PaywallFunnel.clicks": "Clicks",
+    },
+    grain
+  );
+  const ctrTrend = trend(trendQ.resultSet, { "PaywallFunnel.ctr": "CTR" }, grain);
 
   const impressions = num(totals.resultSet, "Paywall.impressions") ?? 0;
   const clicks = num(totals.resultSet, "Paywall.clicks") ?? 0;

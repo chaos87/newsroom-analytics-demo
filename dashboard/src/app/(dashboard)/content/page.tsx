@@ -123,12 +123,14 @@ export default function ContentPage() {
 
         <ChartCard title="Who reads the paper" subtitle="Article pageviews by reader type" grow>
           <QueryState isLoading={readersQ.isLoading} isEmpty={readers.length === 0}>
-            <DonutChart
+            <div className="flex justify-center">
+<DonutChart
               data={readers}
               category="name"
               value="value"
               colors={["gray", "emerald", "accent"]}
             />
+            </div>
           </QueryState>
         </ChartCard>
 

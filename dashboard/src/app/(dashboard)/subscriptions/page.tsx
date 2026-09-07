@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { KpiCard } from "@/components/app/kpi-card";
 import { ChartCard, QueryState } from "@/components/app/chart-card";
 import { useDateRange, grainForRange } from "@/components/app/date-range-context";
-import { num, breakdown, mergeTrends, cell } from "@/lib/cube-data";
+import { num, breakdown, mergeTrends, cell, formatChartDate } from "@/lib/cube-data";
 import { formatPercent } from "@/lib/format";
 import { formattedNumber } from "@/utils/number-format";
 import { BarChart } from "@/components/BarChart/BarChart";
@@ -54,10 +54,13 @@ export default function SubscriptionsPage() {
     measures: ["crm.newChurns"],
     timeDimensions: [{ dimension: "crm.churnDate", dateRange: range, granularity: grain }],
   });
-  const subsVsChurn = mergeTrends([
-    { rs: subsTrendQ.resultSet, series: { "Crm.newSubscribers": "New subscribers" } },
-    { rs: churnTrendQ.resultSet, series: { "Crm.newChurns": "Churns" } },
-  ]);
+  const subsVsChurn = mergeTrends(
+    [
+      { rs: subsTrendQ.resultSet, series: { "Crm.newSubscribers": "New subscribers" } },
+      { rs: churnTrendQ.resultSet, series: { "Crm.newChurns": "Churns" } },
+    ],
+    grain
+  );
 
   // Cumulative base over time
   const cumulativeQ = useCubeQuery({
@@ -97,7 +100,7 @@ export default function SubscriptionsPage() {
 
   const cumulativeData = (cumulativeQ.resultSet?.chartPivot() ?? []).map(
     (row: Record<string, any>) => ({
-      date: row.x,
+      date: formatChartDate(row.x, grain),
       Subscribers: Number(cell(row, "CrmTotals.cumulativeSubscribers") ?? 0),
     })
   );
@@ -150,12 +153,14 @@ export default function SubscriptionsPage() {
 
         <ChartCard title="What they buy" subtitle="New subscribers by tier" grow>
           <QueryState isLoading={tierQ.isLoading} isEmpty={tiers.length === 0}>
-            <DonutChart
+            <div className="flex justify-center">
+<DonutChart
               data={tiers}
               category="name"
               value="value"
               colors={["accent", "gray", "emerald"]}
             />
+            </div>
           </QueryState>
         </ChartCard>
 

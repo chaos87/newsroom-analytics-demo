@@ -46,10 +46,14 @@ export default function OverviewPage() {
     measures: ["sessions.sessions", "sessions.pageviews"],
     timeDimensions: [{ dimension: "sessions.eventDate", dateRange: range, granularity: grain }],
   });
-  const trendData = trend(trendQ.resultSet, {
-    "Sessions.sessions": "Sessions",
-    "Sessions.pageviews": "Pageviews",
-  });
+  const trendData = trend(
+    trendQ.resultSet,
+    {
+      "Sessions.sessions": "Sessions",
+      "Sessions.pageviews": "Pageviews",
+    },
+    grain
+  );
 
   // Channels
   const channelsQ = useCubeQuery({
@@ -112,23 +116,27 @@ export default function OverviewPage() {
 
         <ChartCard title="Where sessions come from" subtitle="By default channel grouping" grow>
           <QueryState isLoading={channelsQ.isLoading} isEmpty={channels.length === 0}>
-            <TremorDonutChart
+            <div className="flex justify-center">
+<TremorDonutChart
               data={channels}
               category="name"
               value="value"
               colors={["gray", "amber", "emerald", "blue", "violet", "pink", "cyan"]}
             />
+            </div>
           </QueryState>
         </ChartCard>
 
         <ChartCard title="Who is reading" subtitle="Article pageviews by reader type" grow>
           <QueryState isLoading={readersQ.isLoading} isEmpty={readers.length === 0}>
-            <TremorDonutChart
+            <div className="flex justify-center">
+<TremorDonutChart
               data={readers}
               category="name"
               value="value"
               colors={["gray", "emerald", "accent"]}
             />
+            </div>
           </QueryState>
         </ChartCard>
       </div>

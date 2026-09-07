@@ -41,10 +41,14 @@ export default function AudiencePage() {
     measures: ["sessions.sessions", "sessions.activeUsers"],
     timeDimensions: [{ dimension: "sessions.eventDate", dateRange: range, granularity: grain }],
   });
-  const trendData = trend(trendQ.resultSet, {
-    "Sessions.sessions": "Sessions",
-    "Sessions.activeUsers": "Active users",
-  });
+  const trendData = trend(
+    trendQ.resultSet,
+    {
+      "Sessions.sessions": "Sessions",
+      "Sessions.activeUsers": "Active users",
+    },
+    grain
+  );
 
   const channelsQ = useCubeQuery({
     measures: ["traffic.sessions", "traffic.pageviews", "traffic.engagedTime", "traffic.newsletterSignups"],
@@ -157,12 +161,14 @@ export default function AudiencePage() {
 
         <ChartCard title="Devices" subtitle="Sessions by device category" grow>
           <QueryState isLoading={devicesQ.isLoading} isEmpty={devices.length === 0}>
-            <DonutChart
+            <div className="flex justify-center">
+<DonutChart
               data={devices}
               category="name"
               value="value"
               colors={["gray", "amber", "emerald"]}
             />
+            </div>
           </QueryState>
         </ChartCard>
 
