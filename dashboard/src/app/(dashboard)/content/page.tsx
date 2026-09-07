@@ -11,7 +11,7 @@ import { formatPercent } from "@/lib/format";
 import { formattedNumber } from "@/utils/number-format";
 import { BarChart } from "@/components/BarChart/BarChart";
 import { BarList } from "@/components/BarList/BarList";
-import { DonutChart } from "@/components/DonutChart/DonutChart";
+import { DonutWithLegend } from "@/components/app/donut-with-legend";
 import {
   Table,
   TableBody,
@@ -123,14 +123,7 @@ export default function ContentPage() {
 
         <ChartCard title="Who reads the paper" subtitle="Article pageviews by reader type" grow>
           <QueryState isLoading={readersQ.isLoading} isEmpty={readers.length === 0}>
-            <div className="flex justify-center">
-<DonutChart
-              data={readers}
-              category="name"
-              value="value"
-              colors={["gray", "emerald", "accent"]}
-            />
-            </div>
+            <DonutWithLegend data={readers} colors={["gray", "emerald", "accent"]} />
           </QueryState>
         </ChartCard>
 

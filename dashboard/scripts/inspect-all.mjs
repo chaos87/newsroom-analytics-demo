@@ -3,7 +3,7 @@ const browser = await chromium.connectOverCDP("http://127.0.0.1:18800");
 const ctx = browser.contexts()[0] ?? (await browser.newContext({ viewport: { width: 1440, height: 900 } }));
 const page = await ctx.newPage();
 for (const slug of ["overview", "audience", "paywall", "content", "subscriptions"]) {
-  await page.goto(`http://localhost:3777/${slug}`, { waitUntil: "load" });
+  await page.goto(`https://meridian-dashboard-liard.vercel.app/${slug}`, { waitUntil: "load" });
   await page.waitForTimeout(15000);
   const r = await page.evaluate(() => {
     const out = [];

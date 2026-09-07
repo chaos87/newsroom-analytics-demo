@@ -11,7 +11,7 @@ import { formattedNumber } from "@/lib/format";
 import { AreaChart } from "@/components/AreaChart/AreaChart";
 import { BarChart } from "@/components/BarChart/BarChart";
 import { BarList } from "@/components/BarList/BarList";
-import { DonutChart } from "@/components/DonutChart/DonutChart";
+import { DonutWithLegend } from "@/components/app/donut-with-legend";
 import {
   Table,
   TableBody,
@@ -161,14 +161,7 @@ export default function AudiencePage() {
 
         <ChartCard title="Devices" subtitle="Sessions by device category" grow>
           <QueryState isLoading={devicesQ.isLoading} isEmpty={devices.length === 0}>
-            <div className="flex justify-center">
-<DonutChart
-              data={devices}
-              category="name"
-              value="value"
-              colors={["gray", "amber", "emerald"]}
-            />
-            </div>
+            <DonutWithLegend data={devices} colors={["gray", "amber", "emerald"]} />
           </QueryState>
         </ChartCard>
 

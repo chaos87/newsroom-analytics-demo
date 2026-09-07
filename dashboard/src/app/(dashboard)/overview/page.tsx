@@ -10,9 +10,7 @@ import { num, trend, breakdown } from "@/lib/cube-data";
 import { formatPercent, formatDuration } from "@/lib/format";
 import { AreaChart as TremorAreaChart } from "@/components/AreaChart/AreaChart";
 import { BarList } from "@/components/BarList/BarList";
-import { DonutChart as TremorDonutChart } from "@/components/DonutChart/DonutChart";
-
-const READER_COLORS = ["gray", "emerald", "accent"] as const;
+import { DonutWithLegend } from "@/components/app/donut-with-legend";
 
 export default function OverviewPage() {
   const { dateRange } = useDateRange();
@@ -116,27 +114,16 @@ export default function OverviewPage() {
 
         <ChartCard title="Where sessions come from" subtitle="By default channel grouping" grow>
           <QueryState isLoading={channelsQ.isLoading} isEmpty={channels.length === 0}>
-            <div className="flex justify-center">
-<TremorDonutChart
+            <DonutWithLegend
               data={channels}
-              category="name"
-              value="value"
               colors={["gray", "amber", "emerald", "blue", "violet", "pink", "cyan"]}
             />
-            </div>
           </QueryState>
         </ChartCard>
 
         <ChartCard title="Who is reading" subtitle="Article pageviews by reader type" grow>
           <QueryState isLoading={readersQ.isLoading} isEmpty={readers.length === 0}>
-            <div className="flex justify-center">
-<TremorDonutChart
-              data={readers}
-              category="name"
-              value="value"
-              colors={["gray", "emerald", "accent"]}
-            />
-            </div>
+            <DonutWithLegend data={readers} colors={["gray", "emerald", "accent"]} />
           </QueryState>
         </ChartCard>
       </div>

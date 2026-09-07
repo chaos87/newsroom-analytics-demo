@@ -11,7 +11,7 @@ import { formatPercent } from "@/lib/format";
 import { formattedNumber } from "@/utils/number-format";
 import { BarChart } from "@/components/BarChart/BarChart";
 import { BarList } from "@/components/BarList/BarList";
-import { DonutChart } from "@/components/DonutChart/DonutChart";
+import { DonutWithLegend } from "@/components/app/donut-with-legend";
 import { AreaChart } from "@/components/AreaChart/AreaChart";
 import { Badge } from "@/components/Badge/Badge";
 
@@ -153,14 +153,7 @@ export default function SubscriptionsPage() {
 
         <ChartCard title="What they buy" subtitle="New subscribers by tier" grow>
           <QueryState isLoading={tierQ.isLoading} isEmpty={tiers.length === 0}>
-            <div className="flex justify-center">
-<DonutChart
-              data={tiers}
-              category="name"
-              value="value"
-              colors={["accent", "gray", "emerald"]}
-            />
-            </div>
+            <DonutWithLegend data={tiers} colors={["accent", "gray", "emerald"]} />
           </QueryState>
         </ChartCard>
 
