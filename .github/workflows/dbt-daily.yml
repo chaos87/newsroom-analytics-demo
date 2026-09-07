@@ -1,12 +1,13 @@
 name: dbt daily build
 
-# Daily incremental dbt run against the Neon GA4 export — the pipeline layer.
-# The dbt-ga4 daily models reprocess a 3-day window (GA4 late-arrival pattern)
-# keyed on current_date; when no new export data has landed the run is a cheap
-# no-op that still exercises the incremental window logic.
+# Nightly schedule DISABLED 2026-09-07: the demo dataset is a complete fixed
+# year (365 daily partitions, Apr '25 – Mar '26) and the 3-day reprocessing
+# window was the only remaining writer to Neon — it pushed the project to ~91%
+# of its 512 MB free-plan storage limit. Reads (dashboard/Cube) are unaffected;
+# re-enable by uncommenting the schedule block below.
+#   schedule:
+#     - cron: "5 3 * * *" # 03:05 UTC daily
 on:
-  schedule:
-    - cron: "5 3 * * *" # 03:05 UTC daily
   workflow_dispatch: {}
 
 jobs:
