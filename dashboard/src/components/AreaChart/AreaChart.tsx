@@ -645,7 +645,7 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
     return (
       <div
         ref={ref}
-        className={cx("h-80 w-full", className)}
+        className={cx("h-full w-full", className)}
         tremor-id="tremor-raw"
         {...other}
       >
