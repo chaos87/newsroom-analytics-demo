@@ -29,6 +29,18 @@ Most analytics portfolios point at tired CSV samples. This one is different: the
                      dim/fct sessions (daily) · pages ·
                      30-day last-non-direct attribution ·
                      article performance (GA4 × CMS join)
+                                            │
+                                            ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Cube.js semantic layer (cube/ — 14 cubes over the dbt marts)        │
+│ deployed on Cloud Run · JWT-only · catalog defined in METRICS.md    │
+└────────────────────────┬───────────────────────────────────────────┘
+                        │  queries (mints its own short-lived JWT)
+                        ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ Next.js dashboard (dashboard/ — Tremor Raw components on Vercel)  │
+│ Overview · Audience · Paywall · Content · Subscriptions            │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ## The raw layer: strictly the GA4 export schema
@@ -63,7 +75,10 @@ The incremental models reprocess a **3-day window per run** — the same late-ar
 db/ga4_schema.sql          raw layer DDL (GA4 export emulation on Postgres)
 dbt/                       dbt project (models, vars, CI profile example)
 packages/dbt_ga4_pg/       vendored Velir/dbt-ga4 port for Postgres
-.github/workflows/          daily dbt build via GitHub Actions
+cube/                      Cube.js semantic layer (14 cubes over the marts)
+dashboard/                 Next.js + Tremor Raw dashboard (deployed on Vercel)
+METRICS.md                 the metric & dimension catalog — definitions first
+.github/workflows/          daily dbt build + Cube auto-deploy via GitHub Actions
 docs/                      GA4 export schema notes
 ```
 
@@ -80,6 +95,22 @@ dbt build            # seeds, models, tests — daily incremental pattern
 ```
 
 CI needs `DBT_HOST`, `DBT_USER`, `DBT_PASSWORD`, `DBT_DBNAME` as repository secrets (see `.github/workflows/dbt-daily.yml`).
+
+## Semantic layer & dashboard
+
+`METRICS.md` is the catalog: every metric and dimension is defined there **before** it is encoded. [Cube.js](https://cube.dev) cubes in `cube/model/` are generated from those definitions — 14 cubes covering audience, content, paywall funnel, CRM growth and subscriptions. The semantic layer runs on Cloud Run (JWT-only, no dev mode; deploys via `.github/workflows/deploy-cube.yml` on changes to `cube/**`).
+
+The dashboard in `dashboard/` is a Next.js App Router app built with [Tremor Raw](https://github.com/tremorlabs/tremor) copy-paste components (Radix + Tailwind v4, charts on Recharts) and `@cubejs-client/react`. Five pages — **Overview, Audience, Paywall, Content, Subscriptions** — with a global date-range selector. A Next.js route handler (`/api/cube-token`) mints the Cube JWT server-side; the API secret never reaches the browser. Every headline number on the dashboard reconciles to the control figures above.
+
+```bash
+# run the dashboard locally (against the deployed Cube API)
+cd dashboard
+npm install
+cp .env.example .env.local   # set NEXT_PUBLIC_CUBEJS_API_URL + CUBEJS_API_SECRET
+npm run dev
+```
+
+Dashboard validation: `node scripts/validate-dashboard.mjs` re-runs every page query against the Cube API and asserts the METRICS.md control numbers (sessions, pageviews, paywall CTR, conversion rate, subscriber counts).
 
 ## Data generator
 
