@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   RiDashboardLine,
+  RiGithubLine,
   RiLineChartLine,
   RiNewspaperLine,
   RiUserHeartLine,
@@ -58,6 +59,16 @@ export function Sidebar() {
           <br />
           semantic layer → Next.js
         </p>
+        <a
+          href="https://github.com/chaos87/newsroom-analytics-demo"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-ink-soft transition-colors hover:text-accent"
+        >
+          <RiGithubLine size={13} aria-hidden />
+          View source
+          <span aria-hidden="true">↗</span>
+        </a>
       </div>
     </aside>
   );
